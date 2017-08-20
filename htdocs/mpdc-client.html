@@ -1,0 +1,57 @@
+<html>
+<head>
+    <title>Simple Media Player Daemon Client Test</title>
+    <link rel="stylesheet" href="AudioBinding.css">
+    <script type="text/javascript" src="AFB-websock.js"></script>
+    <script type="text/javascript" src="AudioBinding.js"></script>
+</head>
+   
+<body onload="init('registry','mpdc', 'output');">
+        
+    <h1>Simple Audio Control Test</h1>
+    <button id="connected" onclick="init('registry','mpdc', 'output');">Binder WS Fail</button>
+    <br><br>
+    <b>Selected HAL </b>
+    <select id='registry'></select>
+
+    <b>Controls </b>
+    <select id="control" onclick="query={};query[this.value]=true; callbinder('mpdc','control', query);">
+        <option value='toggle'>Toggle</option>
+        <option value='pause'>Pause</option>
+        <option value='resume'>Resume</option>
+        <option value='prev'>Play</option>
+        <option value='next'>Stop</option>
+    </select>   
+    
+    <button onclick="callbinder('mpdc','subscribe',{});">Subscribe Event</button>
+    
+    <br>   
+    <ol>
+    
+    <li><button onclick="callbinder('mpdc','output',{});">List Configured Audio Outputs</button></li>
+    <li><button onclick="callbinder('mpdc','status',{});">Get Music Player Daemon status</button></li>
+    <br>
+
+    <li><button onclick="callbinder('mpdc','output',{list:true, only:true, target:{name:'multimedia',enable:true}});">Enable Multimedia Only</button></li>
+    <li><button onclick="callbinder('mpdc','output',{list:true, target:{all:true, enable:true}});">Enable All Defined Output</button></li>
+    <li><button onclick="callbinder('mpdc','output',{list:true, target:{all:true, enable:false}});">Disable All Defined Output</button></li>
+    <br>
+    <li><button onclick="callbinder('mpdc','search',{display:'genre'});">Search Albums All 'Genre'</button></li>
+    <li><button onclick="callbinder('mpdc','search',{display:'artist', target:{type:'genre', content:'folk'}});">Search 'Artist' Genre=Folk</button></li>
+    <li><button onclick="callbinder('mpdc','search',{display:'title' , target:{type:'artist', content:'alan stivell'}});">Search 'Albums' Genre='folk' && Artist='Alan Stivell'</button></li>
+    <li><button onclick="callbinder('mpdc','search',{display:'title' , add:true, target:{type:'artist', content:'alan stivell'}});">Add to Playlist Genre='Folk' && Artist='Alan Stivell'</button></li>
+    <br>
+    <li><button onclick="callbinder('mpdc','play',{current:true});">Check Current Song</button></li>
+    <li><button onclick="callbinder('mpdc','play',{});">Play 1st Song from Playlist</button></li>
+    <li><button onclick="callbinder('mpdc','play',{index:2});">Play 2st Song from Playlist</button></li>
+    
+    </ol>
+
+    
+    <div id="main" style="visibility:hidden">
+    <ol>
+    <li>Question <pre id="question"></pre>
+    <li>Response <pre id="output"></pre>
+    <li>Events: <pre id="outevt"></pre>
+    </ol>
+    </div>    
