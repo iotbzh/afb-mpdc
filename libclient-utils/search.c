@@ -42,10 +42,11 @@ enum mpd_tag_type SearchTypeTag(const char *name) {
     return MPD_TAG_UNKNOWN;
 }
 
-bool SearchAddOneConstraint(afb_req request, mpdConnectT *conn, json_object *contraintJ) {
+bool SearchAddOneConstraint(afb_req request, mpdcHandleT *mpdcHandle, json_object *contraintJ) {
 
     const char *type, *content;
-
+    mpdConnectT *conn= mpdcHandle->mpd;
+            
     int err = wrap_json_unpack(contraintJ, "{s:s, s:s !}", "type", &type, "content", &content);
     if (err) {
         afb_req_fail_f(request, "SearchAddOneConstraint", "Invalid Search Filter =%s", json_object_get_string(contraintJ));
@@ -65,16 +66,16 @@ bool SearchAddOneConstraint(afb_req request, mpdConnectT *conn, json_object *con
     return false;
 }
 
-bool SearchAddConstraints(afb_req request, mpdConnectT *conn, json_object *constraintsJ) {
+bool SearchAddConstraints(afb_req request,mpdcHandleT *mpdcHandle, json_object *constraintsJ) {
 
     // make sure constrains is a valid array
     if (json_object_get_type(constraintsJ) != json_type_array) {
-        int err = SearchAddOneConstraint(request, conn, constraintsJ);
+        int err = SearchAddOneConstraint(request, mpdcHandle, constraintsJ);
         if (err) return true;
         
     } else
         for (int idx = 0; idx < json_object_array_length(constraintsJ); idx++) {
-        int err = SearchAddOneConstraint(request, conn, json_object_array_get_idx(constraintsJ, idx));
+        int err = SearchAddOneConstraint(request, mpdcHandle, json_object_array_get_idx(constraintsJ, idx));
         if (err) return true;
     }
 

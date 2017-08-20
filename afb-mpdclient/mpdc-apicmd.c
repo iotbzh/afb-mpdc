@@ -39,8 +39,30 @@
         
 // Jose this is really scrap !!!
 static afb_req NULL_AFBREQ = {};
+static mpdcHandleT *mpdcLocalHandle;
 
-static MpdcHandleT *mpdcHandle;
+// If no valid session return default mpcdHandle
+STATIC mpdcHandleT* GetSessionHandle(json_object *queryJ) {
+    mpdcHandleT *mpdcHandle;
+    json_object *sessionJ;
+    
+    // if no session let's try default localhost one
+    int done =json_object_object_get_ex(queryJ,"session", &sessionJ);
+    if (!done) return mpdcLocalHandle;
+     
+    // extract session pointer and check for magicnumber 
+    const char* session= json_object_get_string(sessionJ);
+    sscanf (session, "%p", &mpdcHandle);
+   
+    if (mpdcHandle->magic != MPDC_SESSION_MAGIC) {
+      AFB_ERROR ("MPDC:GetSessionHandle (Hoops!!!) Invalid Session Magic");
+      return NULL;
+    }
+    
+    // everything looks fine
+    return mpdcHandle;
+}
+
 
 PUBLIC void mpdcapi_ping(struct afb_req request) {
     json_object *query = afb_req_json(request);
@@ -54,8 +76,9 @@ PUBLIC void mpdcapi_search(afb_req request) {
     json_object *targetJ=NULL;
     json_object *queryJ=afb_req_json(request);
     
-    //  Assert Connection to MPD
-    if (mpdcFailConnect(mpdcHandle, request)) goto OnErrorExit;
+    // Retrieve mpdcHandle from session and assert connection
+    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
 
     //int err= wrap_json_unpack (queryJ, "{s:s,s?i,s?i,s?o !}"
     //    , "display", &display, "exact", &exact, "add", &add, "target", &targetJ);
@@ -80,14 +103,14 @@ PUBLIC void mpdcapi_search(afb_req request) {
         mpd_search_db_tags(mpdcHandle->mpd, tag);                
     else if (!add) {
         mpd_search_db_songs(mpdcHandle->mpd, exact);
-        SearchAddConstraints (request, mpdcHandle->mpd, targetJ);
+        SearchAddConstraints (request, mpdcHandle, targetJ);
     } else {
         mpd_search_add_db_songs(mpdcHandle->mpd, exact);
-        SearchAddConstraints (request, mpdcHandle->mpd, targetJ);        
+        SearchAddConstraints (request, mpdcHandle, targetJ);        
     }
 
     if (!mpd_search_commit(mpdcHandle->mpd)) {
-        miscPostError(request, "MDCP:Search", mpdcHandle->mpd);
+        miscPostError(request, "MDCP:Search", mpdcHandle);
         goto OnErrorExit;
     }
 
@@ -119,14 +142,15 @@ OnErrorExit:
 
 // return Player Daemon Status
 PUBLIC void mpdcapi_play(afb_req request) {
-    json_object *responseJ=NULL;
+    json_object  *responseJ=NULL;
     int done;
     
-    //  Assert Connection to MPD
-    if (mpdcFailConnect(mpdcHandle, request)) goto OnErrorExit;
+    // Retrieve mpdcHandle from session and assert connection
+    json_object *queryJ=afb_req_json(request); 
+    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
 
     // retrieve optional song index
-    json_object *queryJ=afb_req_json(request); 
     int index=0; 
     bool current=0;
     wrap_json_unpack(queryJ, "{s?i, s?b s?b!}", "index", &index, "current", &current);
@@ -149,7 +173,7 @@ PUBLIC void mpdcapi_play(afb_req request) {
         done=mpd_run_play(mpdcHandle->mpd);
     
     if(!done) {
-        miscPostError(request, "MPDC:Play Fail to Process Request", mpdcHandle->mpd);
+        miscPostError(request, "MPDC:Play Fail to Process Request", mpdcHandle);
         goto OnErrorExit;
     }
     
@@ -164,10 +188,12 @@ OnErrorExit:
 // return Player Daemon Status
 PUBLIC void mpdcapi_status(afb_req request) {
     
-    //  Assert Connection to MPD
-    if (mpdcFailConnect(mpdcHandle, request)) goto OnErrorExit;
+    // Retrieve mpdcHandle from session and assert connection
+    json_object *queryJ=afb_req_json(request); 
+    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
 
-    json_object *statusJ = StatusGetAll (request, mpdcHandle->mpd);
+    json_object *statusJ = StatusGetAll (request, mpdcHandle);
     if (!statusJ) goto OnErrorExit;
     
     // return status
@@ -180,12 +206,14 @@ OnErrorExit:
 
 // return list of configured output
 PUBLIC void mpdcapi_output(afb_req request) {
-    json_object *responseJ=NULL;
-    json_object *targetsJ=NULL, *queryJ=afb_req_json(request); 
+    json_object *responseJ=NULL, *targetsJ=NULL; 
     bool only=false, list=true;
 
-    //  Assert Connection to MPD
-    if (mpdcFailConnect(mpdcHandle, request)) goto OnErrorExit;
+    // Retrieve mpdcHandle from session and assert connection
+    // Retrieve mpdcHandle from session and assert connection
+    json_object *queryJ=afb_req_json(request); 
+    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
 
     bool error=wrap_json_unpack(queryJ, "{s?b,s?b,s?o !}"
         ,"list",&list, "only", &only, "target", &targetsJ);
@@ -197,7 +225,7 @@ PUBLIC void mpdcapi_output(afb_req request) {
     }
        
     // get response, send response and cleanup connection
-    responseJ=OutputSetGet(request, mpdcHandle->mpd, list, only, targetsJ);
+    responseJ=OutputSetGet(request, mpdcHandle, list, only, targetsJ);
     if (responseJ) afb_req_success(request, responseJ, NULL);
         
 OnErrorExit:
@@ -205,40 +233,16 @@ OnErrorExit:
     return;
 }
 
-
-PUBLIC void mpdcapi_version(afb_req request) {
-    json_object *responseJ=NULL;
-    const unsigned* version;
-    
-    //  Assert Connection to MPD
-    if (mpdcFailConnect(mpdcHandle, request)) goto OnErrorExit;
-
-    // get MPD version
-    version=mpd_connection_get_server_version(mpdcHandle->mpd);
-    int major=version[0]; 
-    int minor=version[1];
-    int patch=version[2];
-    
-    // return as a json_object
-    wrap_json_pack(&responseJ, "{si,si,si}", "major", major, "minor",minor, "patch",patch);
-    
-    afb_req_success(request, responseJ, NULL);
-
-OnErrorExit:
-    mpd_response_finish(mpdcHandle->mpd);
-    return;
-}
-
-
 PUBLIC void mpdcapi_control(afb_req request) {
     int error, count=0;
     bool flag;
     int value;
     
-    //  Assert Connection to MPD
-    if (mpdcFailConnect(mpdcHandle, request)) goto OnErrorExit;
-
+    // Retrieve mpdcHandle from session and assert connection
+    // Retrieve mpdcHandle from session and assert connection
     json_object *queryJ=afb_req_json(request); 
+    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
 
     if (!json_get_bool(queryJ, "pause", true, &flag)) {
        error =!mpd_send_pause(mpdcHandle->mpd, true);
@@ -253,7 +257,7 @@ PUBLIC void mpdcapi_control(afb_req request) {
     }
     
     if (!json_get_bool(queryJ, "toggle", true, &flag)) {
-        struct mpd_status *status = StatusRun(request, mpdcHandle->mpd);
+        mpdStatusT *status = StatusRun(request, mpdcHandle);
         count++;
         
  	if (mpd_status_get_state(status) == MPD_STATE_PLAY) {
@@ -294,13 +298,59 @@ OnErrorExit:
 }
 
 
-// In Most case Connection to MPD should be automatic
-PUBLIC void mpdcapi_connect(afb_req request) {
-    
-    //  Assert Connection to MPD
-    if (mpdcFailConnect(mpdcHandle, request)) goto OnErrorExit;
+PUBLIC void mpdcapi_version(afb_req request) {
 
-    afb_req_success(request, NULL, NULL);
+    // Retrieve mpdcHandle from session and assert connection
+    // Retrieve mpdcHandle from session and assert connection
+    json_object *queryJ=afb_req_json(request); 
+    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
+    
+    json_object *responseJ= CtlGetversion(mpdcHandle, request);
+    if (!responseJ) goto OnErrorExit;
+    
+    afb_req_success(request, responseJ, NULL);
+
+OnErrorExit:
+    mpd_response_finish(mpdcHandle->mpd);
+    return;
+}
+
+// Connect create a new connection to a given server
+PUBLIC void mpdcapi_connect(afb_req request) {
+    char session[16];
+    bool subscribe=false;
+    
+    mpdcHandleT *mpdcHandle = (mpdcHandleT*)calloc (1, sizeof(mpdcHandleT));
+    mpdcHandle->magic=MPDC_SESSION_MAGIC;
+    
+    // retrieve query arguments if not present use MPCD default
+    json_object *queryJ= afb_req_json(request); 
+    if (json_get_string(queryJ, "label", true, &mpdcHandle->label)) {
+        afb_req_fail_f (request, "MPDC:Connect", "Missing Label:xxxx in Query=%s", json_object_get_string(queryJ));
+        goto OnErrorExit;
+    }
+    if (json_get_string(queryJ, "host", true, &mpdcHandle->hostname)) mpdcHandle->hostname=NULL;
+    if (json_get_int(queryJ, "port", true, &mpdcHandle->port)) mpdcHandle->port=0;
+    if (json_get_int(queryJ, "timeout", true, &mpdcHandle->timeout)) mpdcHandle->timeout=MPDC_DEFAULT_TIMEOUT;
+       
+    //  Check/Build Connection to MPD
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
+    
+    if (json_get_bool(queryJ, "subscribe", true, &subscribe)) subscribe=false;
+    if (subscribe) {
+        int error=EventCreate(mpdcHandle, request);
+        if (error) goto OnErrorExit;       
+    }
+    
+    // return handle address as hexadecimal
+    snprintf(session, sizeof(session), "%p", mpdcHandle);
+    json_object *responseJ=json_object_new_object();
+    json_object_object_add(responseJ, "session", json_object_new_string(session));
+    json_object_object_add(responseJ, "version", CtlGetversion(mpdcHandle, request));
+    json_object_object_add(responseJ,"output",OutputSetGet(request, mpdcHandle, true, false, NULL));
+
+    afb_req_success(request, responseJ, NULL);
     
 OnErrorExit:
     mpd_response_finish(mpdcHandle->mpd);
@@ -310,9 +360,27 @@ OnErrorExit:
 // Create a private connection for synchronous commands
 PUBLIC bool mpdcapi_init(const char *bindername) {
 
-    mpdcHandle = (MpdcHandleT*)calloc (1, sizeof(MpdcHandleT));
-    mpdcHandle->label="CmdChannel";
-    bool error=mpdcFailConnect(mpdcHandle, NULL_AFBREQ);
+    mpdcLocalHandle = (mpdcHandleT*)calloc (1, sizeof(mpdcHandleT));
+    mpdcLocalHandle->label="LocalMpdc";
+    mpdcLocalHandle->magic=MPDC_SESSION_MAGIC;
+    mpdcLocalHandle->timeout=MPDC_DEFAULT_TIMEOUT; 
+    bool error=mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcLocalHandle, NULL_AFBREQ);
     
-    return error;
+    // failing to connect is not a fatal error
+    if (error) {
+        AFB_WARNING("MPDC:mpdcapi_init No Default Music Player Daemon (setenv MPDC_NODEF_CONNECT");
+        free (mpdcLocalHandle);
+        mpdcLocalHandle=NULL;
+        goto OnErrorExit;
+    }
+    
+    // best effort to subscribe to event
+    error=EventCreate(mpdcLocalHandle, NULL_AFBREQ);
+    if (error) AFB_WARNING("MPDC:mpdcapi_init Fail Create Event for default Music Player Daemon");
+
+    mpd_response_finish(mpdcLocalHandle->mpd);    
+    return false;
+    
+ OnErrorExit:  // failing to open default MPD is not a fatal error;
+    return false; 
 }

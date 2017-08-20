@@ -31,29 +31,43 @@ STATIC void mpdcDispatchEvent(const char *evtLabel, json_object *eventJ);
 #include "mpdc-apidef.h"
 
 
-PUBLIC  bool mpdcFailConnect(MpdcHandleT *mpdcHandle, afb_req request) {
+PUBLIC  bool mpdcIfConnectFail(mpdcChannelEnumT channel, mpdcHandleT *mpdcHandle, afb_req request) {
     bool forceConnect= false; 
+    mpdConnectT *mpd;
     
-    // when trying to reconnect from main loop request is not valid
-    if (!afb_req_is_valid(request) || !mpdcHandle->mpd) forceConnect=true;
+    // if exit try reusing current connection
+    switch (channel) {
+        case MPDC_CHANNEL_CMD:
+            if (!mpdcHandle->mpd) forceConnect=true;
+            else mpd=mpdcHandle->mpd;
+            break;
+        case MPDC_CHANNEL_EVT:
+            if (!mpdcHandle->mpdEvt) forceConnect=true;
+            else mpd=mpdcHandle->mpdEvt;
+            break;
+        default:
+            AFB_ERROR("MDPC:ConnectFail (Hoops) invalid channel value");
+            goto OnErrorExit;     
+    };
     
     // if not already connected let's try to connect
     if (forceConnect) {
         // connect to MPD daemon NULL=localhost, 0=default port, 30000 timeout/ms
-        mpdcHandle->mpd = mpd_connection_new(NULL, 0, 30000);
-        if (mpdcHandle->mpd == NULL) {
+        mpd = mpd_connection_new(mpdcHandle->hostname, mpdcHandle->port, mpdcHandle->timeout);
+        if (mpd == NULL) {
             if (afb_req_is_valid(request)) afb_req_fail (request, "MDCP:Create", "No More Memory");
             goto OnErrorExit;
-        }        
+        }   
+        
+        if (channel == MPDC_CHANNEL_CMD) mpdcHandle->mpd=mpd;
+        if (channel == MPDC_CHANNEL_EVT) mpdcHandle->mpdEvt=mpd;
     }
-
-    if (mpd_connection_get_error(mpdcHandle->mpd) != MPD_ERROR_SUCCESS) {
-            if (afb_req_is_valid(request)) afb_req_fail (request, "MDPC:Connect", mpd_connection_get_error_message(mpdcHandle->mpd));
-            else AFB_ERROR("MDPC:Connect error=%s",  mpd_connection_get_error_message(mpdcHandle->mpd));
-            mpd_connection_free(mpdcHandle->mpd);
-            mpdcHandle->mpd = NULL;
+   
+    if (mpd_connection_get_error(mpd) != MPD_ERROR_SUCCESS) {
+            AFB_ERROR("MDPC:Connect error=%s",  mpd_connection_get_error_message(mpd));
+            mpd_connection_free(mpd);
             goto OnErrorExit;
-    }    
+    }
     return false;
     
  OnErrorExit:
@@ -75,11 +89,11 @@ STATIC int mpdcBindingInit(void) {
     
     // create a global event to send MPDC events
     const char*binderName = GetBinderName();
-    
-    // Initialise Needed Components
-    rc+=mpdcapi_init(binderName);
-    rc+=EventInit(binderName);
-    
+
+    // when set wait for explicit connect request
+    const char *noDefConnect= getenv("MPDC_NODEF_CONNECT");
+    if (!noDefConnect) rc+=mpdcapi_init(binderName);
+
     return rc;
 }
 

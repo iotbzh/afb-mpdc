@@ -31,17 +31,18 @@
 static afb_req NULL_AFBREQ = {};
 
 STATIC int MainLoopCallback(sd_event_source* src, int fd, uint32_t revents, void* handle) {
-    MpdcHandleT *mpdcHandle = (MpdcHandleT*)handle;
+    mpdcHandleT *mpdcHandle = (mpdcHandleT*)handle;
     
     // Looks like that at this point we should not put any filter on mpd_recv_idle (Fulup why???)
-    mpd_recv_idle(mpdcHandle->mpd, true);
-    if(mpd_connection_get_error(mpdcHandle->mpd)){
-        AFB_ERROR ("MPDC:MainLoopCallback Got Error=%s", mpd_connection_get_error_message(mpdcHandle->mpd));
+    mpd_recv_idle(mpdcHandle->mpdEvt, true);
+    if(mpd_connection_get_error(mpdcHandle->mpdEvt)){
+        AFB_ERROR ("MPDC:MainLoopCallback Got Error=%s", mpd_connection_get_error_message(mpdcHandle->mpdEvt));
         
         // try to recover from error if needed close and reopen connection after timeout
-        int success = mpd_connection_clear_error(mpdcHandle->mpd);
+        int success = mpd_connection_clear_error(mpdcHandle->mpdEvt);
         if (!success) {
-            int error= mpdcFailConnect(mpdcHandle, NULL_AFBREQ); 
+            mpdcHandle->mpdEvt=NULL; // Force reconnection to server
+            int error= mpdcIfConnectFail(MPDC_CHANNEL_EVT, mpdcHandle, NULL_AFBREQ); 
             if (!error) MainLoopAddMpdc(mpdcHandle);
             return false;
         }
@@ -49,13 +50,13 @@ STATIC int MainLoopCallback(sd_event_source* src, int fd, uint32_t revents, void
     }
     
     // event are empty we need to query back MPD
-    mpd_command_list_begin(mpdcHandle->mpd, true);
-    mpd_send_status(mpdcHandle->mpd);
-    mpd_send_current_song(mpdcHandle->mpd);
-    mpd_command_list_end(mpdcHandle->mpd);
+    mpd_command_list_begin(mpdcHandle->mpdEvt, true);
+    mpd_send_status(mpdcHandle->mpdEvt);
+    mpd_send_current_song(mpdcHandle->mpdEvt);
+    mpd_command_list_end(mpdcHandle->mpdEvt);
     
     // now that got status we may parse it to generate some form of usefull events
-    enum mpd_state state= mpd_status_get_state(mpd_recv_status(mpdcHandle->mpd));
+    enum mpd_state state= mpd_status_get_state(mpd_recv_status(mpdcHandle->mpdEvt));
     char*stateName;
     switch (state) {
         case MPD_STATE_STOP:
@@ -78,16 +79,15 @@ STATIC int MainLoopCallback(sd_event_source* src, int fd, uint32_t revents, void
     (void)EventPush (ctlEventJ);
     
     if (state == MPD_STATE_PLAY) {
-        mpd_response_next(mpdcHandle->mpd);
+        mpd_response_next(mpdcHandle->mpdEvt);
         struct mpd_song *song;
-        song = mpd_recv_song(mpdcHandle->mpd);
+        song = mpd_recv_song(mpdcHandle->mpdEvt);
         json_object *songJ= CtlPlayCurrentSong(song);
         (void)EventPush (songJ);
     }
-    
-    
-    mpd_response_finish(mpdcHandle->mpd);
-    mpd_send_idle_mask(mpdcHandle->mpd, MPD_IDLE_PLAYER); 
+       
+    mpd_response_finish(mpdcHandle->mpdEvt);
+    mpd_send_idle_mask(mpdcHandle->mpdEvt, MPD_IDLE_PLAYER); 
     return 0;
 
 OnErrorExit:
@@ -95,20 +95,19 @@ OnErrorExit:
     return 0;
 }
 
-PUBLIC bool MainLoopAddMpdc(MpdcHandleT *mpdcHandle) {
+PUBLIC bool MainLoopAddMpdc(mpdcHandleT *mpdcHandle) {
     int err;
     sd_event_source *source;
     
     // Listen only to Player Event
-    //mpd_connection_set_timeout(mpdcHandle->mpd,1000); // set timeout to 1s
-    mpd_send_idle_mask(mpdcHandle->mpd, MPD_IDLE_PLAYER); 
+    //mpd_connection_set_timeout(mpdcHandle->mpdEvt,1000); // set timeout to 1s
+    mpd_send_idle_mask(mpdcHandle->mpdEvt, MPD_IDLE_PLAYER); 
 
     // retrieve socket handle
-    int sockfd=mpd_connection_get_fd(mpdcHandle->mpd);
+    int sockfd=mpd_connection_get_fd(mpdcHandle->mpdEvt);
     if (sockfd <= 0) {
         AFB_ERROR("MPDC:MainLoopCallback Fail to retrieve MPDC connection FD");
-        goto OnErrorExit;
-        
+        goto OnErrorExit;        
     }
     
     // add socket file descriptor to binder libsystemd mainloop

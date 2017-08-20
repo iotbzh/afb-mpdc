@@ -35,7 +35,7 @@
 
 #include "mpdc-binding.h"
 
-static MpdcHandleT* mpdcHandle=NULL;
+static mpdcHandleT* mpdcHandle=NULL;
 
 // Jose this is really scrap !!!
 static afb_req NULL_AFBREQ = {};
@@ -45,6 +45,7 @@ typedef struct {
     int  count;
     afb_event event;
 } afbEventT;
+
 static afbEventT *afbEvent=NULL;
 
 
@@ -101,30 +102,17 @@ PUBLIC void mpdcapi_subscribe(afb_req request) {
 }
 
 // Create MPDC binder event and open a new socket to MPD for event only
-PUBLIC bool EventInit(const char *binderName) {
+PUBLIC bool EventCreate(mpdcHandleT *mpdcHandle, afb_req request) {
     bool error;
     
-    // Free any previous event structure
-    if (afbEvent) {
-        if (afb_event_is_valid(afbEvent->event)) return false;
-        else free(afbEvent);  // Fulup->Jose: Question how binder known about this ???
-    }
-    
-    afbEvent = calloc (1, sizeof(afbEventT));
-    afbEvent->name=binderName;
-    afbEvent->event = afb_daemon_make_event(binderName);
-    
-    // Prepare a dedicated connection for MPD for events
-    mpdcHandle = (MpdcHandleT*)calloc (1, sizeof(MpdcHandleT));
-    mpdcHandle->label="EvtChannel";
-    error=mpdcFailConnect(mpdcHandle, NULL_AFBREQ);
+    error=mpdcIfConnectFail(MPDC_CHANNEL_EVT, mpdcHandle, request);
     if (error) goto OnErrorExit;
     
     // Connect Event Channel to Mainloop
     error=MainLoopAddMpdc(mpdcHandle);
     if (error) goto OnErrorExit;
     
-    return true;
+    return false;
     
 OnErrorExit:
     return true;    

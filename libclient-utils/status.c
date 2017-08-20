@@ -53,10 +53,11 @@ OnErrorExit:
     
 }    
 
-PUBLIC json_object *StatusGetAll(afb_req request,  mpdConnectT *mpdConnect) {
-    struct mpd_status *status;
+PUBLIC json_object *StatusGetAll(afb_req request, mpdcHandleT *mpdcHandle) {
+    mpdStatusT *status;
     const struct mpd_audio_format *audio_format;
     json_object *daemonStatus=NULL, *songStatus=NULL, *formatStatus=NULL;
+    mpdConnectT *mpdConnect= mpdcHandle->mpd;
     int err=0;
 
     if (!mpd_command_list_begin(mpdConnect, true) || !mpd_send_status(mpdConnect) ||
@@ -127,10 +128,11 @@ OnErrorExit:
 }
 
 
-PUBLIC struct mpd_status *StatusRun(afb_req request, mpdConnectT*conn) {
-	struct mpd_status *ret = mpd_run_status(conn);
+PUBLIC mpdStatusT *StatusRun(afb_req request, mpdcHandleT *mpdcHandle) {
+
+	mpdStatusT *ret = mpd_run_status(mpdcHandle->mpd);
 	if (ret == NULL)
-		miscPostError(request, "StatusRun", conn);
+		miscPostError(request, "StatusRun", mpdcHandle);
 
 	return ret;
 }

@@ -78,5 +78,46 @@
       <item path="libclient-utils/misc.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>
+    <conf name="demo-audio" type="0">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <codeAssistance>
+        <buildAnalyzer>false</buildAnalyzer>
+        <includeAdditional>true</includeAdditional>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>build</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>build</preBuildCommandWorkingDir>
+          <preBuildCommand>cmake ..</preBuildCommand>
+        </preBuild>
+      </makefileType>
+      <item path="afb-mpdclient/mpdc-binding.c" ex="false" tool="0" flavor2="9">
+      </item>
+      <item path="build/CMakeFiles/3.5.2/CompilerIdC/CMakeCCompilerId.c"
+            ex="false"
+            tool="0"
+            flavor2="9">
+      </item>
+      <item path="build/CMakeFiles/3.5.2/CompilerIdCXX/CMakeCXXCompilerId.cpp"
+            ex="false"
+            tool="1"
+            flavor2="9">
+      </item>
+      <item path="build/CMakeFiles/feature_tests.c" ex="false" tool="0" flavor2="9">
+      </item>
+      <item path="build/CMakeFiles/feature_tests.cxx" ex="false" tool="1" flavor2="9">
+      </item>
+      <item path="libclient-utils/misc.c" ex="false" tool="0" flavor2="9">
+      </item>
+    </conf>
   </confs>
 </configurationDescriptor>

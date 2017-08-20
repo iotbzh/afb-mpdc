@@ -69,4 +69,22 @@ PUBLIC json_object *CtlPlayCurrentSong(struct mpd_song *song) {
 
 OnErrorExit:
     return NULL;
-}    
+}
+
+
+PUBLIC json_object *CtlGetversion(mpdcHandleT *mpdcHandle, afb_req request) {
+    json_object *responseJ=NULL;
+    const unsigned* version;
+
+    // get MPD version
+    version=mpd_connection_get_server_version(mpdcHandle->mpd);
+    int major=version[0]; 
+    int minor=version[1];
+    int patch=version[2];
+    
+    // return as a json_object
+    wrap_json_pack(&responseJ, "{si,si,si}", "major", major, "minor",minor, "patch",patch);
+    
+    return (responseJ);
+
+}

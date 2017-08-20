@@ -86,7 +86,11 @@ git pull --recurse-submodules https://github.com/iotbzh/mpdc-binding
     * stat "Display statistics about MPD"
     * version "Report version of MPD"
     
+## Environement Variables
 
+* MPDC_NODEF_CONNECT by default MPDC will try to connect to Music Player Daemon default port on locahost. When MPDC_NODEF_CONNECT
+  is et no connection is try at initialisation time and MPDC will wait for effective connection request. Note that MPDC support
+  simultaneous connections to as many MPD you need (in demo sample config: Multimedia, Navigation, Emergency, ...).
 
 
  

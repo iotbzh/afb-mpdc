@@ -18,7 +18,7 @@
 
 # Project Info
 # ------------------
-set(PROJECT_NAME audio-mpc)
+set(PROJECT_NAME mpdc-binding)
 set(PROJECT_VERSION "0.1")
 set(PROJECT_PRETTY_NAME "Advance Audio Client for Music Player Daemon")
 set(PROJECT_DESCRIPTION "Provide an AGL Application Framework Binding for Music Player Daemon")
@@ -75,6 +75,12 @@ set (PKG_REQUIRED_LIST
         libmpdclient
 )
 
+
+# default Connection Timeout in MS (10s!!!)
+add_compile_options(-DMPDC_DEFAULT_TIMEOUT=10000)
+
+# Magic number to check MPDC plugin session integrity
+add_compile_options(-DMPDC_SESSION_MAGIC=963258741)
 set(CLOSING_MESSAGE "Debug from ./buid: afb-daemon --port=1234 --ldpaths=. --workdir=. --roothttp=../htdocs --tracereq=common --token='' --verbose")
 
 # Customize link option

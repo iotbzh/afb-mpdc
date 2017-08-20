@@ -37,7 +37,10 @@
 #include "libclient-utils.h"
 
 
-PUBLIC void miscPostError(afb_req request, const char* errlabel, struct mpd_connection *conn) {
+PUBLIC void miscPostError(afb_req request, const char* errlabel, mpdcHandleT *mpdHandle) {
+    
+     mpdConnectT *conn = mpdHandle->mpd;
+    
 	if (mpd_connection_get_error(conn) != MPD_ERROR_SUCCESS) {
             afb_req_fail_f (request, errlabel, "(hoops) Fail to Connect to Music Media Player Daemon ");
             return;

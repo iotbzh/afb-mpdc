@@ -18,7 +18,7 @@
 
 
 # Add target to project dependency list
-PROJECT_TARGET_ADD(control-afb)
+PROJECT_TARGET_ADD(mpdc-api)
 
     # Define project Targets
     ADD_LIBRARY(${TARGET_NAME} MODULE mpdc-binding.c  mpdc-apicmd.c mpdc-events.c mpdc-mainloop.c)
@@ -40,8 +40,4 @@ PROJECT_TARGET_ADD(control-afb)
         libclient-utils
         ${link_libraries}
     )
-
-    # installation directory
-    INSTALL(TARGETS ${TARGET_NAME}
-        LIBRARY DESTINATION CMAKE_INSTALL_PREFIX )
 

@@ -40,12 +40,31 @@
 // make our life easier
 typedef struct mpd_connection mpdConnectT;
 typedef struct mpd_output mpdOutputT;
+typedef struct mpd_status mpdStatusT;
+
+
+typedef enum {
+    MPDC_CHANNEL_CMD,
+    MPDC_CHANNEL_EVT,
+} mpdcChannelEnumT;
+
+typedef struct {
+    long magic;
+    const char *label;
+    const char *hostname;
+    int port;
+    int timeout; // ms
+    int count;
+    mpdConnectT *mpd;
+    mpdConnectT *mpdEvt;
+    afb_event event;
+} mpdcHandleT;
 
 // output.c
-PUBLIC json_object* OutputSetGet(afb_req request, mpdConnectT *mpdConnect, bool list, bool only, json_object *targetsJ);
+PUBLIC json_object* OutputSetGet(afb_req request, mpdcHandleT *mpdHandle, bool list, bool only, json_object *targetsJ);
 
 // misc.c
-PUBLIC void miscPostError(afb_req request, const char* errlabel, mpdConnectT *conn);
+PUBLIC void miscPostError(afb_req request, const char* errlabel, mpdcHandleT *mpdHandle);
 
 // search.c add few type TAG ???
 enum {
@@ -55,15 +74,16 @@ enum {
 };
 
 enum mpd_tag_type SearchTypeTag(const char *name);
-bool SearchAddConstraints(afb_req request, mpdConnectT *conn, json_object *constraintsJ);
-bool SearchAddOneConstraint(afb_req request, mpdConnectT *conn, json_object *contraintJ);
+bool SearchAddConstraints(afb_req request,mpdcHandleT *mpdHandle, json_object *constraintsJ);
+bool SearchAddOneConstraint(afb_req request, mpdcHandleT *mpdHandle, json_object *contraintJ);
 
 // status.c
 PUBLIC json_object *StatusSongTag(const struct mpd_song *song, enum mpd_tag_type type);
-PUBLIC json_object *StatusGetAll(afb_req request,  mpdConnectT *mpdConnect);
-PUBLIC struct mpd_status *StatusRun(afb_req request, mpdConnectT *conn);
+PUBLIC json_object *StatusGetAll(afb_req request,  mpdcHandleT *mpdHandle);
+PUBLIC mpdStatusT *StatusRun(afb_req request, mpdcHandleT *mpdHandle);
 
 // control.c
 PUBLIC json_object *CtlPlayCurrentSong(struct mpd_song *song);
+PUBLIC json_object *CtlGetversion(mpdcHandleT *mpdcHandle, afb_req request);
 
 #endif /* MPCLIBUTILS_H */

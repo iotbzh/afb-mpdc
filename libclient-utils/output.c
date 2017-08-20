@@ -100,10 +100,11 @@ OnErrorExit:
     return true;
 }
 
-PUBLIC json_object* OutputSetGet(afb_req request, mpdConnectT *mpdConnect, bool list, bool only, json_object *targetsJ) {
+PUBLIC json_object* OutputSetGet(afb_req request, mpdcHandleT *mpdHandle, bool list, bool only, json_object *targetsJ) {
     struct mpd_output *output;
     unsigned count;
     json_object*responseJ=NULL;
+    mpdConnectT *mpdConnect = mpdHandle->mpd;
     
     // list request
     if (list) responseJ = json_object_new_array();
@@ -158,7 +159,7 @@ PUBLIC json_object* OutputSetGet(afb_req request, mpdConnectT *mpdConnect, bool 
         
         // End command packing
         if (!mpd_command_list_end(mpdConnect)) {
-            miscPostError(request, "MPDC:SetGetOutput", mpdConnect);
+            miscPostError(request, "MPDC:SetGetOutput", mpdHandle);
             goto OnErrorExit;
         }
     }
