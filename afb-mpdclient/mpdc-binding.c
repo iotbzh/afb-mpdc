@@ -82,17 +82,14 @@ STATIC void mpdcDispatchEvent(const char *evtLabel, json_object *eventJ) {
 
 // Call at Init time (place here any runtime dependencies)
 STATIC int mpdcBindingInit(void) {
-
-    
-    int rc= prctl(PR_SET_NAME, "afb-mpdc-agent",NULL,NULL,NULL);
-    if (rc) AFB_ERROR("ERROR: AlsaCore fail to rename process");
+    int rc;
     
     // create a global event to send MPDC events
     const char*binderName = GetBinderName();
 
     // when set wait for explicit connect request
     const char *noDefConnect= getenv("MPDC_NODEF_CONNECT");
-    if (!noDefConnect) rc+=mpdcapi_init(binderName);
+    if (!noDefConnect) rc=mpdcapi_init(binderName);
 
     return rc;
 }

@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------
-                Audio Client Binding for Music Daemon Player
+#                Audio Client Binding for Music Daemon Player
 ------------------------------------------------------------------------
 
-# Cloning Music Player Binding from Git
+## Cloning Music Player Binding from Git
 -------------------------------------------------------
 
 ```
@@ -13,7 +13,7 @@ git clone --recurse-submodules https://github.com/iotbzh/mpdc-binding
 git pull --recurse-submodules https://github.com/iotbzh/mpdc-binding
 ```
 
-### Dependencies
+## Dependencies
 
 See instructions for AGL Linux native dev packages at https://en.opensuse.org/LinuxAutomotive#Installation_AGL_Application_Framework
 
@@ -25,7 +25,7 @@ See instructions for AGL Linux native dev packages at https://en.opensuse.org/Li
     * sudo apt install agl-app-framework-binder
     * sudo apt install libmpdclient-dev mpd
 
-### Quick start
+## Quick start
 
  * Compile mpdc-binding
    * cd mpdc-binding
@@ -37,14 +37,50 @@ See instructions for AGL Linux native dev packages at https://en.opensuse.org/Li
    * Place config file somewhere (default mpd search location $HOME/.config/mpd/mpd.conf or /etc/mpd.conf)
    * Edit mpd.conf to reflect your configuration
  * Start MPD in debug mode
-   * mpd --no-daemon path-to-mpd.conf
+   * mpd --no-daemon path-to-your-mpd.conf
  * Start mpdc-binding
    * afb-daemon
+
+ * Verify your Alsa Config
+   * Make sure pulse does not preempt your sound card (pavucontrol/configuration/soundcard/off)
+   * Install you asoundrc file (see sample in conf.d/project/alsa.d)
+   * Assert that your Alsa/PCM is active example:speaker-test -DNavPCM -c2 -twav
+   ```
+     grep pcm ~/.asoundrc  # check your configure PCM
+     speaker-test -Dhw:v1340 -c2 -twav        # check sound card
+     speaker-test -DMixerPCM -c2 -twav        # check Alsa Mixer
+     speaker-test -DNavSoftvolPCM -c2 -twav   # check Navigation Softvol
+     speaker-test -DNavigation -c2 -twav      # WARNING: AAAA/control should be ready to respond
+
+     Note: no need to reload Alsa for those test. ~.asoundrc is read for each new request
+   ```
 
  * Note: For you initial test, you may want to use a richer graphical frontend like cantata(Qt).
     ** OpenSuse Binary Package https://software.opensuse.org/package/cantata
 
-### API
+ * Check it works (list music repository)
+   * mpc ls
+   * mpc findadd filename 'music-filename.mp3'  # warning should be fullname
+   * mpc playlist # check your playlist contend
+   * mpc play
+   ```
+   # Do not set MPD_PORT in environement to advoid further conflict
+   export NAV_MPD=6002   # My Music Player Deamon Port
+   - MPD_PORT=$NAV_MPD mpc ls   # List all files from my Music library
+   - MPD_PORT=$NAV_MPD mpc output # list audio output
+
+   - MPD_PORT=$NAV_MPD mpc findadd filename 'message-1.mp3' # add file to playlist
+   - MPD_PORT=$NAV_MPD mpc playlist # list song in default playlist
+   - MPD_PORT=$NAV_MPD mpc clear # clear all playlist
+
+   - MPD_PORT=$NAV_MPD mpc play
+   - MPD_PORT=$NAV_MPD mpc pause
+   - MPD_PORT=$NAV_MPD mpc toggle
+
+
+   ```
+
+## API
 
  * Search search the database for song,categories and optionally add them to play list
     * display(mandatory): field to be return by command eg: artist, title, filename, ...
