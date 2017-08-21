@@ -15,15 +15,21 @@ git pull --recurse-submodules https://github.com/iotbzh/mpdc-binding
 
 ### Dependencies
 
- * OpenSuse: See instruction for AGL Linux native dev packages at https://en.opensuse.org/LinuxAutomotive
+See instructions for AGL Linux native dev packages at https://en.opensuse.org/LinuxAutomotive#Installation_AGL_Application_Framework
+
+ * OpenSuse:
     * sudo zypper in agl-app-framework-binder
     * sudo zypper in libmpdclient-devel mpd
 
+* Ubuntu 16.04LTS
+    * sudo apt install agl-app-framework-binder
+    * sudo apt install libmpdclient-dev mpd
 
 ### Quick start
 
  * Compile mpdc-binding
-   * cd  mpdc-binding
+   * cd mpdc-binding
+   * mkdir build && cd build
    * cmake ..
    * make
  * Create an Alsa Config for Music Player Daemon
@@ -33,7 +39,7 @@ git pull --recurse-submodules https://github.com/iotbzh/mpdc-binding
  * Start MPD in debug mode
    * mpd --no-daemon path-to-mpd.conf
  * Start mpdc-binding
-   * afb-daemon 
+   * afb-daemon
 
  * Note: For you initial test, you may want to use a richer graphical frontend like cantata(Qt).
     ** OpenSuse Binary Package https://software.opensuse.org/package/cantata
@@ -41,7 +47,7 @@ git pull --recurse-submodules https://github.com/iotbzh/mpdc-binding
 ### API
 
  * Search search the database for song,categories and optionally add them to play list
-    * display(mandatory): fiel to be return by command eg: artist, title, filename, ...
+    * display(mandatory): field to be return by command eg: artist, title, filename, ...
     * query(optional): artist_name (should match with type)
     * target(optional) and array of [{type:xxx, content:yyy}]
     * add(optional): boolean (search and add to play list)
@@ -53,12 +59,12 @@ git pull --recurse-submodules https://github.com/iotbzh/mpdc-binding
     * only(default:false) revers action for every non listed output
     * target:(default:none) json array of targeted outputs [{name:xxxx|id:??|all:true, enable:true/false}]
     * example: {api:'mpdc',verb:'output', only:true, target:[{name='zone-front',enable:true(default)}, ...], ...}
- 
+
  * Play a song from a playlist
     * current(default:true): play current song from current playlist
     * index(default:true) song index in play list
     * playlist(optional): chosen playlist name
-    * example:  {api:'mpdc',verb:'play', query={paylist:'Fulup', index:10}}
+    * example:  {api:'mpdc',verb:'play', query={playlist:'Fulup', index:10}}
 
  * Control send control action to music daemon (except when specified control are simple boolean)
     * pause
@@ -85,14 +91,13 @@ git pull --recurse-submodules https://github.com/iotbzh/mpdc-binding
     * update "[<path>]", "Scan music directory for updates"
     * stat "Display statistics about MPD"
     * version "Report version of MPD"
-    
+
 ## Environement Variables
 
-* MPDC_NODEF_CONNECT by default MPDC will try to connect to Music Player Daemon default port on locahost. When MPDC_NODEF_CONNECT
+* MPDC_NODEF_CONNECT by default MPDC will try to connect to Music Player Daemon default port on localhost. When MPDC_NODEF_CONNECT
   is et no connection is try at initialisation time and MPDC will wait for effective connection request. Note that MPDC support
   simultaneous connections to as many MPD you need (in demo sample config: Multimedia, Navigation, Emergency, ...).
 
 
- 
 
- 
+
