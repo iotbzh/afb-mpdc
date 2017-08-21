@@ -35,8 +35,6 @@
 
 #include "mpdc-binding.h"
 
-static mpdcHandleT* mpdcHandle=NULL;
-
 // Jose this is really scrap !!!
 static afb_req NULL_AFBREQ = {};
 

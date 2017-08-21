@@ -66,6 +66,8 @@ PUBLIC  bool mpdcIfConnectFail(mpdcChannelEnumT channel, mpdcHandleT *mpdcHandle
     if (mpd_connection_get_error(mpd) != MPD_ERROR_SUCCESS) {
             AFB_ERROR("MDPC:Connect error=%s",  mpd_connection_get_error_message(mpd));
             mpd_connection_free(mpd);
+            mpdcHandle->mpdEvt=NULL;
+            mpdcHandle->mpd=NULL;
             goto OnErrorExit;
     }
     return false;

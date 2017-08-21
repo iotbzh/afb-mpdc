@@ -64,6 +64,13 @@ STATIC mpdcHandleT* GetSessionHandle(json_object *queryJ) {
 }
 
 
+
+STATIC void mpdcFlushConnect(mpdcHandleT *mpdcHandle) {
+    
+    if (mpdcHandle->mpd) mpd_response_finish(mpdcHandle->mpd);
+}
+
+
 PUBLIC void mpdcapi_ping(struct afb_req request) {
     json_object *query = afb_req_json(request);
     afb_req_success(request, query, NULL);
@@ -135,7 +142,7 @@ PUBLIC void mpdcapi_search(afb_req request) {
     afb_req_success(request, listJ, NULL);
     
 OnErrorExit:
-    mpd_response_finish(mpdcHandle->mpd);
+    mpdcFlushConnect(mpdcHandle);
     return;    
 }
 
@@ -181,7 +188,7 @@ PUBLIC void mpdcapi_play(afb_req request) {
     afb_req_success(request, responseJ, NULL);
         
 OnErrorExit:
-    mpd_response_finish(mpdcHandle->mpd);
+    mpdcFlushConnect(mpdcHandle);
     return;
 }
 
@@ -200,9 +207,39 @@ PUBLIC void mpdcapi_status(afb_req request) {
     afb_req_success(request, statusJ, NULL);    
     
 OnErrorExit:
-    mpd_response_finish(mpdcHandle->mpd);
+    mpdcFlushConnect(mpdcHandle);
     return; 
 }
+
+// Provide playlist Management
+PUBLIC void mpdcapi_playlist(afb_req request) {
+    json_object *responseJ=NULL, *targetsJ=NULL; 
+    bool only=false, list=true;
+
+    // Retrieve mpdcHandle from session and assert connection
+    // Retrieve mpdcHandle from session and assert connection
+    json_object *queryJ=afb_req_json(request); 
+    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
+
+    bool error=wrap_json_unpack(queryJ, "{s?b,s?b,s?o !}"
+        ,"list",&list, "only", &only, "target", &targetsJ);
+
+    // for unknown reason queryJ=="null" when query is empty (José ???)
+    if(error && (queryJ!=NULL && json_object_get_type(queryJ) == json_type_object)) {
+       afb_req_fail_f(request, "MDCP:Output", "Invalid query input '%s'", json_object_get_string(queryJ)); 
+       goto OnErrorExit;                
+    }
+       
+    // get response, send response and cleanup connection
+    responseJ=OutputSetGet(request, mpdcHandle, list, only, targetsJ);
+    if (responseJ) afb_req_success(request, responseJ, NULL);
+        
+OnErrorExit:
+    mpdcFlushConnect(mpdcHandle);
+    return;
+}
+
 
 // return list of configured output
 PUBLIC void mpdcapi_output(afb_req request) {
@@ -229,7 +266,7 @@ PUBLIC void mpdcapi_output(afb_req request) {
     if (responseJ) afb_req_success(request, responseJ, NULL);
         
 OnErrorExit:
-    mpd_response_finish(mpdcHandle->mpd);
+    mpdcFlushConnect(mpdcHandle);
     return;
 }
 
@@ -293,7 +330,7 @@ OnDoneExit:
         afb_req_success(request, NULL, NULL);
     
 OnErrorExit:
-    mpd_response_finish(mpdcHandle->mpd);
+    mpdcFlushConnect(mpdcHandle);
    return;    
 }
 
@@ -312,7 +349,7 @@ PUBLIC void mpdcapi_version(afb_req request) {
     afb_req_success(request, responseJ, NULL);
 
 OnErrorExit:
-    mpd_response_finish(mpdcHandle->mpd);
+    mpdcFlushConnect(mpdcHandle);
     return;
 }
 
@@ -353,7 +390,7 @@ PUBLIC void mpdcapi_connect(afb_req request) {
     afb_req_success(request, responseJ, NULL);
     
 OnErrorExit:
-    mpd_response_finish(mpdcHandle->mpd);
+    mpdcFlushConnect(mpdcHandle);
     return;    
 }
 
@@ -378,7 +415,7 @@ PUBLIC bool mpdcapi_init(const char *bindername) {
     error=EventCreate(mpdcLocalHandle, NULL_AFBREQ);
     if (error) AFB_WARNING("MPDC:mpdcapi_init Fail Create Event for default Music Player Daemon");
 
-    mpd_response_finish(mpdcLocalHandle->mpd);    
+    mpdcFlushConnect(mpdcLocalHandle);
     return false;
     
  OnErrorExit:  // failing to open default MPD is not a fatal error;
