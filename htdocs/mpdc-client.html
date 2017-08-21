@@ -31,7 +31,10 @@
     <li><button onclick="callbinder('mpdc','output',{});">List Configured Audio Outputs</button></li>
     <li><button onclick="callbinder('mpdc','status',{});">Get Music Player Daemon status</button></li>
     <br>
-
+    <li><button onclick="callbinder('mpdc','listsong',{});">List Song in Music Directory</button></li>
+    <li><button onclick="callbinder('mpdc','playlist',{'current':true});">List Current Playlist Queue</button></li>
+    <li><button onclick="callbinder('mpdc','playlist',{'name':'default'});">List Playlist name 'default'</button></li>
+    <br>
     <li><button onclick="callbinder('mpdc','output',{list:true, only:true, target:{name:'multimedia',enable:true}});">Enable Multimedia Only</button></li>
     <li><button onclick="callbinder('mpdc','output',{list:true, target:{all:true, enable:true}});">Enable All Defined Output</button></li>
     <li><button onclick="callbinder('mpdc','output',{list:true, target:{all:true, enable:false}});">Disable All Defined Output</button></li>

@@ -60,11 +60,14 @@ typedef struct {
     afb_event event;
 } mpdcHandleT;
 
+
 // output.c
 PUBLIC json_object* OutputSetGet(afb_req request, mpdcHandleT *mpdHandle, bool list, bool only, json_object *targetsJ);
 
+
 // misc.c
 PUBLIC void miscPostError(afb_req request, const char* errlabel, mpdcHandleT *mpdHandle);
+
 
 // search.c add few type TAG ???
 enum {
@@ -77,13 +80,19 @@ enum mpd_tag_type SearchTypeTag(const char *name);
 bool SearchAddConstraints(afb_req request,mpdcHandleT *mpdHandle, json_object *constraintsJ);
 bool SearchAddOneConstraint(afb_req request, mpdcHandleT *mpdHandle, json_object *contraintJ);
 
+
 // status.c
 PUBLIC json_object *StatusSongTag(const struct mpd_song *song, enum mpd_tag_type type);
 PUBLIC json_object *StatusGetAll(afb_req request,  mpdcHandleT *mpdHandle);
 PUBLIC mpdStatusT *StatusRun(afb_req request, mpdcHandleT *mpdHandle);
 
+
 // control.c
-PUBLIC json_object *CtlPlayCurrentSong(struct mpd_song *song);
+PUBLIC json_object *CtlPlayCurrentSong(const struct mpd_song *song);
 PUBLIC json_object *CtlGetversion(mpdcHandleT *mpdcHandle, afb_req request);
+
+// list.c
+PUBLIC json_object *ListDirSong (afb_req request, mpdcHandleT *mpdcHandle, json_object *pathJ);
+PUBLIC json_object *ListPlayList (afb_req request, mpdcHandleT *mpdcHandle, const char *name);
 
 #endif /* MPCLIBUTILS_H */

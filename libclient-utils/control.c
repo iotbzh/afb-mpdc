@@ -30,7 +30,7 @@
 #include "libclient-utils.h"
 #include "json-setget.h"
 
-PUBLIC json_object *CtlPlayCurrentSong(struct mpd_song *song) {
+PUBLIC json_object *CtlPlayCurrentSong(const struct mpd_song *song) {
     
     if (!song)  goto OnErrorExit;
     
@@ -63,7 +63,7 @@ PUBLIC json_object *CtlPlayCurrentSong(struct mpd_song *song) {
     
         
     // free song resources
-    mpd_song_free(song);    
+    mpd_song_free((struct mpd_song*)song);    
     
     return responseJ;
 

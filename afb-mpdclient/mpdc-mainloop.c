@@ -95,7 +95,7 @@ OnErrorExit:
     return 0;
 }
 
-PUBLIC bool MainLoopAddMpdc(mpdcHandleT *mpdcHandle) {
+PUBLIC int MainLoopAddMpdc(mpdcHandleT *mpdcHandle) {
     int err;
     sd_event_source *source;
     

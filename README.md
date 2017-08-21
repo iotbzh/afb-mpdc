@@ -113,8 +113,8 @@ See instructions for AGL Linux native dev packages at https://en.opensuse.org/Li
     * seek "[+-][HH:MM:SS]|<0-100>%", "Seeks to the specified position"
 
   * Playlist control playlist
-    * list  "List currently available playlists"
-    * print "[<playlist>]", "Print <playlist>"
+    * current  "Print current Playlist Queue"
+    * name "[<playlist>]", "Print <playlist> content, multiple list name might be given as an array"
     * clear "Clear the current playlist"
     * shuffle "Shuffle the current playlist"
     * move "<from> <to>", "Move song in playlist"
@@ -122,6 +122,9 @@ See instructions for AGL Linux native dev packages at https://en.opensuse.org/Li
     * save "<file>", "Save a playlist as <file>"
     * load "<file>", "Load <file> as a playlist"
     * remove "<file>", "Remove a playlist"
+
+  * File Management
+    * listsong [path] list all song from Daemon at given path (no path == list all)
 
   * Manage few administrative commands
     * update "[<path>]", "Scan music directory for updates"

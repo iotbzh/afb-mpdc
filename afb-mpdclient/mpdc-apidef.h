@@ -47,30 +47,39 @@ static const char _afb_description_v2_mpdc[] =
     "Play a Song from Playlist.\",\"get\":{\"x-permissions\":{\"$ref\":\"#/co"
     "mponents/x-permissions/mpdclient\"},\"parameters\":[{\"in\":\"query\",\""
     "name\":\"index\",\"required\":false,\"schema\":{\"type\":\"integer\"}}],"
-    "\"responses\":{\"200\":{\"$ref\":\"#/components/responses/200\"}}}},\"/c"
-    "onnect\":{\"description\":\"Connect to local or remote Music Player Daem"
-    "on.\",\"get\":{\"x-permissions\":{\"$ref\":\"#/components/x-permissions/"
-    "mpdclient\"},\"parameters\":[{\"in\":\"query\",\"name\":\"hostname\",\"r"
-    "equired\":false,\"schema\":{\"type\":\"string\"}},{\"in\":\"query\",\"na"
-    "me\":\"port\",\"required\":false,\"schema\":{\"type\":\"integer\"}}],\"r"
-    "esponses\":{\"200\":{\"$ref\":\"#/components/responses/200\"}}}},\"/vers"
-    "ion\":{\"description\":\"Get Music Player Daemon Version.\",\"get\":{\"x"
-    "-permissions\":{\"$ref\":\"#/components/x-permissions/mpdclient\"},\"res"
-    "ponses\":{\"200\":{\"$ref\":\"#/components/responses/200\"}}}},\"/output"
-    "\":{\"description\":\"Return Current Avaliable Ouputs.\",\"get\":{\"x-pe"
-    "rmissions\":{\"$ref\":\"#/components/x-permissions/mpdclient\"},\"respon"
-    "ses\":{\"200\":{\"$ref\":\"#/components/responses/200\"}}}},\"/status\":"
-    "{\"description\":\"Return Current Daemon Status.\",\"get\":{\"x-permissi"
-    "ons\":{\"$ref\":\"#/components/x-permissions/mpdclient\"},\"responses\":"
-    "{\"200\":{\"$ref\":\"#/components/responses/200\"}}}},\"/control\":{\"de"
-    "scription\":\"Play Current song.\",\"get\":{\"x-permissions\":{\"$ref\":"
-    "\"#/components/x-permissions/mpdclient\"},\"parameters\":[{\"in\":\"quer"
-    "y\",\"name\":\"pause\",\"required\":false,\"schema\":{\"type\":\"boolean"
-    "\"}},{\"in\":\"query\",\"name\":\"resume\",\"required\":false,\"schema\""
-    ":{\"type\":\"boolean\"}},{\"in\":\"query\",\"name\":\"next\",\"required\""
-    ":false,\"schema\":{\"type\":\"boolean\"}},{\"in\":\"query\",\"name\":\"s"
-    "top\",\"required\":false,\"schema\":{\"type\":\"boolean\"}}],\"responses"
-    "\":{\"200\":{\"$ref\":\"#/components/responses/200\"}}}}}}"
+    "\"responses\":{\"200\":{\"$ref\":\"#/components/responses/200\"}}}},\"/l"
+    "istsong\":{\"description\":\"List Songs From Music Library.\",\"get\":{\""
+    "x-permissions\":{\"$ref\":\"#/components/x-permissions/mpdclient\"},\"pa"
+    "rameters\":[{\"in\":\"query\",\"name\":\"path\",\"required\":false,\"sch"
+    "ema\":{\"type\":\"integer\"}}],\"responses\":{\"200\":{\"$ref\":\"#/comp"
+    "onents/responses/200\"}}}},\"/playlist\":{\"description\":\"List Playlis"
+    "t Content.\",\"get\":{\"x-permissions\":{\"$ref\":\"#/components/x-permi"
+    "ssions/mpdclient\"},\"parameters\":[{\"in\":\"query\",\"name\":\"name\","
+    "\"required\":false,\"schema\":{\"type\":\"integer\"}}],\"responses\":{\""
+    "200\":{\"$ref\":\"#/components/responses/200\"}}}},\"/connect\":{\"descr"
+    "iption\":\"Connect to local or remote Music Player Daemon.\",\"get\":{\""
+    "x-permissions\":{\"$ref\":\"#/components/x-permissions/mpdclient\"},\"pa"
+    "rameters\":[{\"in\":\"query\",\"name\":\"hostname\",\"required\":false,\""
+    "schema\":{\"type\":\"string\"}},{\"in\":\"query\",\"name\":\"port\",\"re"
+    "quired\":false,\"schema\":{\"type\":\"integer\"}}],\"responses\":{\"200\""
+    ":{\"$ref\":\"#/components/responses/200\"}}}},\"/version\":{\"descriptio"
+    "n\":\"Get Music Player Daemon Version.\",\"get\":{\"x-permissions\":{\"$"
+    "ref\":\"#/components/x-permissions/mpdclient\"},\"responses\":{\"200\":{"
+    "\"$ref\":\"#/components/responses/200\"}}}},\"/output\":{\"description\""
+    ":\"Return Current Avaliable Ouputs.\",\"get\":{\"x-permissions\":{\"$ref"
+    "\":\"#/components/x-permissions/mpdclient\"},\"responses\":{\"200\":{\"$"
+    "ref\":\"#/components/responses/200\"}}}},\"/status\":{\"description\":\""
+    "Return Current Daemon Status.\",\"get\":{\"x-permissions\":{\"$ref\":\"#"
+    "/components/x-permissions/mpdclient\"},\"responses\":{\"200\":{\"$ref\":"
+    "\"#/components/responses/200\"}}}},\"/control\":{\"description\":\"Play "
+    "Current song.\",\"get\":{\"x-permissions\":{\"$ref\":\"#/components/x-pe"
+    "rmissions/mpdclient\"},\"parameters\":[{\"in\":\"query\",\"name\":\"paus"
+    "e\",\"required\":false,\"schema\":{\"type\":\"boolean\"}},{\"in\":\"quer"
+    "y\",\"name\":\"resume\",\"required\":false,\"schema\":{\"type\":\"boolea"
+    "n\"}},{\"in\":\"query\",\"name\":\"next\",\"required\":false,\"schema\":"
+    "{\"type\":\"boolean\"}},{\"in\":\"query\",\"name\":\"stop\",\"required\""
+    ":false,\"schema\":{\"type\":\"boolean\"}}],\"responses\":{\"200\":{\"$re"
+    "f\":\"#/components/responses/200\"}}}}}}"
 ;
 
 static const struct afb_auth _afb_auths_v2_mpdc[] = {
@@ -81,6 +90,8 @@ static const struct afb_auth _afb_auths_v2_mpdc[] = {
  void mpdcapi_subscribe(struct afb_req req);
  void mpdcapi_search(struct afb_req req);
  void mpdcapi_play(struct afb_req req);
+ void mpdcapi_listsong(struct afb_req req);
+ void mpdcapi_playlist(struct afb_req req);
  void mpdcapi_connect(struct afb_req req);
  void mpdcapi_version(struct afb_req req);
  void mpdcapi_output(struct afb_req req);
@@ -112,6 +123,20 @@ static const struct afb_verb_v2 _afb_verbs_v2_mpdc[] = {
     {
         .verb = "play",
         .callback = mpdcapi_play,
+        .auth = &_afb_auths_v2_mpdc[0],
+        .info = NULL,
+        .session = AFB_SESSION_NONE_V2
+    },
+    {
+        .verb = "listsong",
+        .callback = mpdcapi_listsong,
+        .auth = &_afb_auths_v2_mpdc[0],
+        .info = NULL,
+        .session = AFB_SESSION_NONE_V2
+    },
+    {
+        .verb = "playlist",
+        .callback = mpdcapi_playlist,
         .auth = &_afb_auths_v2_mpdc[0],
         .info = NULL,
         .session = AFB_SESSION_NONE_V2

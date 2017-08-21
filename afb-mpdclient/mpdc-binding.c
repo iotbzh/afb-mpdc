@@ -31,8 +31,8 @@ STATIC void mpdcDispatchEvent(const char *evtLabel, json_object *eventJ);
 #include "mpdc-apidef.h"
 
 
-PUBLIC  bool mpdcIfConnectFail(mpdcChannelEnumT channel, mpdcHandleT *mpdcHandle, afb_req request) {
-    bool forceConnect= false; 
+PUBLIC  int mpdcIfConnectFail(mpdcChannelEnumT channel, mpdcHandleT *mpdcHandle, afb_req request) {
+    int forceConnect= false; 
     mpdConnectT *mpd;
     
     // if exit try reusing current connection

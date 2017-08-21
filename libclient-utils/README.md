@@ -1,0 +1,1 @@
+Most of the logic in this directory is directly taken or inspired from https://github.com/MusicPlayerDaemon/mpc.git

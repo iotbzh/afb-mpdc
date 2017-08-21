@@ -37,22 +37,25 @@
 #include "libclient-utils.h"
 
 
+
 PUBLIC void miscPostError(afb_req request, const char* errlabel, mpdcHandleT *mpdHandle) {
-    
-     mpdConnectT *conn = mpdHandle->mpd;
-    
-	if (mpd_connection_get_error(conn) != MPD_ERROR_SUCCESS) {
-            afb_req_fail_f (request, errlabel, "(hoops) Fail to Connect to Music Media Player Daemon ");
-            return;
-        }
 
-	const char *message = mpd_connection_get_error_message(conn);
-	if (mpd_connection_get_error(conn) == MPD_ERROR_SERVER)
-		/* messages received from the server are UTF-8; the
-		   rest is either US-ASCII or locale */
-		message = charset_from_utf8(message);
+    mpdConnectT *conn = mpdHandle->mpd;
 
-        AFB_ERROR ("mpd error: %s", message);
-	afb_req_fail_f (request, errlabel, "mpd error: %s", message);
-	mpd_connection_free(conn);
+    if (mpd_connection_get_error(conn) != MPD_ERROR_SUCCESS) {
+        afb_req_fail_f(request, errlabel, "(hoops) Fail to Connect to Music Media Player Daemon ");
+        return;
+    }
+
+    const char *message = mpd_connection_get_error_message(conn);
+    if (mpd_connection_get_error(conn) == MPD_ERROR_SERVER) {
+        /* messages received from the server are UTF-8; the
+           rest is either US-ASCII or locale */
+        message = charset_from_utf8(message);
+        AFB_ERROR("mpd error: %s", message);
+    }
+
+    afb_req_fail_f(request, errlabel, "mpd error: %s", message);
+    mpd_connection_free(conn);
+    mpdHandle->mpd = NULL;
 }

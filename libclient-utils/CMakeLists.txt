@@ -20,7 +20,7 @@
 PROJECT_TARGET_ADD(libclient-utils)
 
     # Define targets 
-    ADD_LIBRARY(${TARGET_NAME} STATIC charset.c search.c misc.c output.c status.c control.c)
+    ADD_LIBRARY(${TARGET_NAME} STATIC charset.c search.c misc.c output.c status.c control.c list.c)
 
     # Library properties
     SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES

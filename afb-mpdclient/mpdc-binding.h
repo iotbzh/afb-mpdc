@@ -30,18 +30,18 @@
 
 
 // mpdc-binding.c
-PUBLIC bool mpdcIfConnectFail(mpdcChannelEnumT channel, mpdcHandleT *mpdcHandle, afb_req request);
+PUBLIC int mpdcIfConnectFail(mpdcChannelEnumT channel, mpdcHandleT *mpdcHandle, afb_req request);
 
 // mpdc_command.c
-PUBLIC bool mpdcapi_init(const char *bindername);
+PUBLIC int mpdcapi_init(const char *bindername);
 
 // mpdc-event.c
-PUBLIC bool EventPush ( json_object *ctlEventJ);
+PUBLIC int EventPush ( json_object *ctlEventJ);
 PUBLIC void mpdcapi_subscribe(afb_req request);
-PUBLIC bool EventCreate(mpdcHandleT *mpdcHandle, afb_req request);
+PUBLIC int EventCreate(mpdcHandleT *mpdcHandle, afb_req request);
 
 // MainLoop.c
-PUBLIC bool MainLoopAddMpdc(mpdcHandleT *mpdcHandle);
+PUBLIC int MainLoopAddMpdc(mpdcHandleT *mpdcHandle);
 
 #endif /* MPCLIBMAPPING_H */
 

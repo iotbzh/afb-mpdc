@@ -35,8 +35,6 @@
 
 #include "mpdc-binding.h"
 
-// Jose this is really scrap !!!
-static afb_req NULL_AFBREQ = {};
 
 typedef struct {
     const char *name;
@@ -47,7 +45,7 @@ typedef struct {
 static afbEventT *afbEvent=NULL;
 
 
-PUBLIC bool EventPush ( json_object *ctlEventJ) {
+PUBLIC int EventPush ( json_object *ctlEventJ) {
     afbEvent->count++;
  
     if (!afbEvent && !afb_event_is_valid(afbEvent->event)) {
@@ -68,7 +66,7 @@ OnErrorExit:
 }
 
 // Subscribe Client to Event
-PUBLIC bool EventSubscribe (afb_req request) {
+PUBLIC int EventSubscribe (afb_req request) {
     if (!afb_req_is_valid(request)) return true;
     
     if (!afbEvent) {
@@ -100,8 +98,8 @@ PUBLIC void mpdcapi_subscribe(afb_req request) {
 }
 
 // Create MPDC binder event and open a new socket to MPD for event only
-PUBLIC bool EventCreate(mpdcHandleT *mpdcHandle, afb_req request) {
-    bool error;
+PUBLIC int EventCreate(mpdcHandleT *mpdcHandle, afb_req request) {
+    int error;
     
     error=mpdcIfConnectFail(MPDC_CHANNEL_EVT, mpdcHandle, request);
     if (error) goto OnErrorExit;
