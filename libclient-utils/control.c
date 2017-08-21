@@ -53,6 +53,8 @@ PUBLIC json_object *CtlPlayCurrentSong(const struct mpd_song *song) {
     //    }
 
     json_object *responseJ=json_object_new_object();
+    int index = mpd_song_get_id(song);
+    if (index) json_object_object_add(responseJ, "index",json_object_new_int(index));
     if(artist) json_object_object_add(responseJ, "artist", artist);
     if(album) json_object_object_add(responseJ, "album", album);
     if(album) json_object_object_add(responseJ, "title", title);

@@ -118,7 +118,6 @@ See instructions for AGL Linux native dev packages at https://en.opensuse.org/Li
     * clear "Clear the current playlist"
     * shuffle "Shuffle the current playlist"
     * move "<from> <to>", "Move song in playlist"
-    * insert "<uri>", "Insert a song to the current playlist after the current track"
     * save "<file>", "Save a playlist as <file>"
     * load "<file>", "Load <file> as a playlist"
     * remove "<file>", "Remove a playlist"
