@@ -51,16 +51,10 @@ typedef struct {
 } outputElemT;
 
 STATIC bool OutputOneSetGet(afb_req request, mpdConnectT *mpdConnect, bool only, outputElemT *outputs, json_object *targetJ) {
-    const char *name=0;
-    int id=0;
-    bool enable=true, all=false;
+    const char *name=NULL;
+    int id=0, enable=true, all=false;
 
-    //int err= wrap_json_unpack(targetJ, "{s?b,s?s,s?i,s?b !}",  "enable", &enable, "name", &name, "id", &id, "all", &all);
-    int err=0;
-    json_get_string(targetJ, "name"  , false,  &name);
-    json_get_int(targetJ   , "id"   , false,  &id);
-    json_get_bool(targetJ  , "enable", false,  &enable);
-    json_get_bool(targetJ  , "all"  , false,  &all);
+    int err= wrap_json_unpack(targetJ, "{s?b,s?s,s?i,s?b !}",  "enable", &enable, "name", &name, "id", &id, "all", &all);
     if (err) {
         afb_req_fail_f(request, "MPDC:OutputOneSetGet", "Invalid Ouput target='%s'", json_object_get_string(targetJ));
         goto OnErrorExit;
@@ -101,7 +95,6 @@ OnErrorExit:
 }
 
 PUBLIC json_object* OutputSetGet(afb_req request, mpdcHandleT *mpdHandle, bool list, bool only, json_object *targetsJ) {
-    struct mpd_output *output;
     unsigned count;
     json_object*responseJ=NULL;
     mpdConnectT *mpdConnect = mpdHandle->mpd;
@@ -116,6 +109,7 @@ PUBLIC json_object* OutputSetGet(afb_req request, mpdcHandleT *mpdHandle, bool l
     outputElemT* outputs= alloca(sizeof(outputElemT) * MAX_CONFIGURE_OUTPUT);
 
     // build the list of configure output
+    struct mpd_output *output;
     for (count=0;(output = mpd_recv_output(mpdConnect)) != NULL; count++) {
         
         /* We increment by 1 to make it natural to the user  */
