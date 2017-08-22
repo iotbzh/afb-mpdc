@@ -148,6 +148,7 @@ OnErrorExit:
 
 
 // return Player Daemon Status
+/* XXX - cleanup : replace by mpdapi_control type play
 PUBLIC void mpdcapi_play(afb_req request) {
     json_object  *responseJ=NULL;
     int done;
@@ -191,6 +192,7 @@ OnErrorExit:
     mpdcFlushConnect(mpdcHandle);
     return;
 }
+*/
 
 // return Player Daemon Status
 PUBLIC void mpdcapi_status(afb_req request) {

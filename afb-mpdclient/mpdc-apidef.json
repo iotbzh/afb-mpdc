@@ -3,7 +3,7 @@
     "$schema": "http:iot.bzh/download/openapi/schema-3.0/default-schema.json",
     "info": {
         "description": "",
-        "title": "controler",
+        "title": "controller",
         "version": "1.0",
         "x-binding-c-generator": {
             "api": "mpdc",
@@ -18,25 +18,21 @@
             "private": false
         }
     },
-    "servers": [
-        {
-            "url": "ws://{host}:{port}/api/polctl",
-            "description": "Music Player Client Binding.",
-            "variables": {
-                "host": {
-                    "default": "localhost"
-                },
-                "port": {
-                    "default": "1234"
-                }
+    "servers": [{
+        "url": "ws://{host}:{port}/api/polctl",
+        "description": "Music Player Client Binding.",
+        "variables": {
+            "host": {
+                "default": "localhost"
             },
-            "x-afb-events": [
-                {
-                    "$ref": "#/components/schemas/afb-event"
-                }
-            ]
-        }
-    ],
+            "port": {
+                "default": "1234"
+            }
+        },
+        "x-afb-events": [{
+            "$ref": "#/components/schemas/afb-event"
+        }]
+    }],
     "components": {
         "schemas": {
             "afb-reply": {
@@ -122,16 +118,14 @@
                 "x-permissions": {
                     "$ref": "#/components/x-permissions/mpdclient"
                 },
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "args",
-                        "required": false,
-                        "schema": {
-                            "type": "json"
-                        }
+                "parameters": [{
+                    "in": "query",
+                    "name": "args",
+                    "required": false,
+                    "schema": {
+                        "type": "json"
                     }
-                ],
+                }],
                 "responses": {
                     "200": {
                         "$ref": "#/components/responses/200"
@@ -140,21 +134,19 @@
             }
         },
         "/subscribe": {
-            "description": "Subcribe Music Player Events",
+            "description": "Subscribe Music Player Events",
             "get": {
                 "x-permissions": {
                     "$ref": "#/components/x-permissions/mpdclient"
                 },
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "event",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                "parameters": [{
+                    "in": "query",
+                    "name": "event",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
                     }
-                ],
+                }],
                 "responses": {
                     "200": {
                         "$ref": "#/components/responses/200"
@@ -168,8 +160,7 @@
                 "x-permissions": {
                     "$ref": "#/components/x-permissions/mpdclient"
                 },
-                "parameters": [
-                    {
+                "parameters": [{
                         "in": "query",
                         "name": "type",
                         "required": true,
@@ -225,45 +216,20 @@
                 }
             }
         },
-        "/play": {
-            "description": "Play a Song from Playlist.",
-            "get": {
-                "x-permissions": {
-                    "$ref": "#/components/x-permissions/mpdclient"
-                },
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "index",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "$ref": "#/components/responses/200"
-                    }
-                }
-            }
-        },
         "/listsong": {
             "description": "List Songs From Music Library.",
             "get": {
                 "x-permissions": {
                     "$ref": "#/components/x-permissions/mpdclient"
                 },
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "path",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
+                "parameters": [{
+                    "in": "query",
+                    "name": "path",
+                    "required": false,
+                    "schema": {
+                        "type": "integer"
                     }
-                ],
+                }],
                 "responses": {
                     "200": {
                         "$ref": "#/components/responses/200"
@@ -277,16 +243,14 @@
                 "x-permissions": {
                     "$ref": "#/components/x-permissions/mpdclient"
                 },
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "name",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
+                "parameters": [{
+                    "in": "query",
+                    "name": "name",
+                    "required": false,
+                    "schema": {
+                        "type": "integer"
                     }
-                ],
+                }],
                 "responses": {
                     "200": {
                         "$ref": "#/components/responses/200"
@@ -300,23 +264,21 @@
                 "x-permissions": {
                     "$ref": "#/components/x-permissions/mpdclient"
                 },
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "hostname",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },{
-                        "in": "query",
-                        "name": "port",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
+                "parameters": [{
+                    "in": "query",
+                    "name": "hostname",
+                    "required": false,
+                    "schema": {
+                        "type": "string"
                     }
-                ],
+                }, {
+                    "in": "query",
+                    "name": "port",
+                    "required": false,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }],
                 "responses": {
                     "200": {
                         "$ref": "#/components/responses/200"
@@ -338,7 +300,7 @@
             }
         },
         "/output": {
-            "description": "Return Current Avaliable Ouputs.",
+            "description": "Return Current Available Outputs.",
             "get": {
                 "x-permissions": {
                     "$ref": "#/components/x-permissions/mpdclient"
@@ -369,37 +331,49 @@
                 "x-permissions": {
                     "$ref": "#/components/x-permissions/mpdclient"
                 },
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "pause",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },{
-                        "in": "query",
-                        "name": "resume",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },{
-                        "in": "query",
-                        "name": "next",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },{
-                        "in": "query",
-                        "name": "stop",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean"
-                        }
+                "parameters": [{
+                    "in": "query",
+                    "name": "pause",
+                    "required": false,
+                    "schema": {
+                        "type": "boolean"
                     }
-                ],
+                }, {
+                    "in": "query",
+                    "name": "resume",
+                    "required": false,
+                    "schema": {
+                        "type": "boolean"
+                    }
+                }, {
+                    "in": "query",
+                    "name": "toogle",
+                    "required": false,
+                    "schema": {
+                        "type": "boolean"
+                    }
+                }, {
+                    "in": "query",
+                    "name": "play",
+                    "required": false,
+                    "schema": {
+                        "type": "boolean"
+                    }
+                }, {
+                    "in": "query",
+                    "name": "prev",
+                    "required": false,
+                    "schema": {
+                        "type": "boolean"
+                    }
+                }, {
+                    "in": "query",
+                    "name": "next",
+                    "required": false,
+                    "schema": {
+                        "type": "boolean"
+                    }
+                }],
                 "responses": {
                     "200": {
                         "$ref": "#/components/responses/200"
