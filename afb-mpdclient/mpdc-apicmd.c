@@ -256,25 +256,25 @@ PUBLIC void mpdcapi_playlist(afb_req request) {
         responseJ= ListPlayList (request, mpdcHandle, name);
         if (!responseJ) goto OnErrorExit;
     }
-    
+
     if (load) {
         action="load";
-       if (!name) name="default"; 
-       error= !mpd_send_load(mpdcHandle->mpd, charset_to_utf8(name)); 
-       if (error) goto OnErrorExit;       
+       if (!name) name="default";
+       error= !mpd_send_load(mpdcHandle->mpd, charset_to_utf8(name));
+       if (error) goto OnErrorExit;
     }
 
     if (save) {
        action="save";
-       if (!name) name="default"; 
-       error= !mpd_send_save(mpdcHandle->mpd, charset_to_utf8(name)); 
-       if (error) goto OnErrorExit;       
+       if (!name) name="default";
+       error= !mpd_send_save(mpdcHandle->mpd, charset_to_utf8(name));
+       if (error) goto OnErrorExit;
     }
-    
+
     if (load) {
-       if (!name) name="default"; 
-       error= !mpd_send_load(mpdcHandle->mpd, charset_to_utf8(name)); 
-       if (error) goto OnErrorExit;       
+       if (!name) name="default";
+       error= !mpd_send_load(mpdcHandle->mpd, charset_to_utf8(name));
+       if (error) goto OnErrorExit;
     }
 
     afb_req_success(request, responseJ, NULL);
@@ -341,52 +341,63 @@ OnErrorExit:
 
 PUBLIC void mpdcapi_control(afb_req request) {
     int error, count=0;
-    int flag;
-    int value;
+    int pause, resume, toggle, play, prev, next;
+    pause = resume = prev = next = false;
+    toggle = play = -1;
 
     // Retrieve mpdcHandle from session and assert connection
-    // Retrieve mpdcHandle from session and assert connection
-    json_object *queryJ=afb_req_json(request);
-    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
-    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
+    json_object *queryJ = afb_req_json(request);
+    mpdcHandleT *mpdcHandle = GetSessionHandle(queryJ);
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request))
+        goto OnErrorExit;
 
-    if (!json_get_int(queryJ, "pause", true, &flag)) {
+    error = wrap_json_unpack(queryJ, "{s?b,s?b,s?i,s?i,s?b,s?b}",
+                "pause", &pause, "resume", &resume, "toogle", &toggle,
+                "play", &play, "prev", &prev, "next", &next);
+    // for unknown reason queryJ=="null" when query is empty (José ???)
+    if (error && (queryJ != NULL && json_object_get_type(queryJ) == json_type_object)) {
+        afb_req_fail_f(request, "MDCP:control", "Invalid query input '%s'", json_object_get_string(queryJ));
+        goto OnErrorExit;
+    }
+
+    if (pause) {
        error =!mpd_send_pause(mpdcHandle->mpd, true);
        count++;
        goto OnDoneExit;
     }
 
-    if (!json_get_int(queryJ, "resume", true, &flag)) {
+    if (resume) {
        error = !mpd_run_play(mpdcHandle->mpd);
        count++;
        goto OnDoneExit;
     }
 
-    if (!json_get_int(queryJ, "toggle", true, &flag)) {
+    if (toggle >= 0) {
         mpdStatusT *status = StatusRun(request, mpdcHandle);
         count++;
-
- 	if (mpd_status_get_state(status) == MPD_STATE_PLAY) {
+     	if (mpd_status_get_state(status) == MPD_STATE_PLAY) {
             error = !mpd_send_pause(mpdcHandle->mpd, true);
-	} else {
-            error = !mpd_run_play(mpdcHandle->mpd);
-	}
+    	} else {
+            toggle--;   // same as in mpc source code
+            error = !mpd_run_play_pos(mpdcHandle->mpd, toggle);
+	    }
         goto OnDoneExit;
     }
 
-    if (!json_get_int(queryJ, "play", true, &value)) {
-        error = !mpd_run_play_pos(mpdcHandle->mpd, value);
+    if (play >= 0) {
+        play--;   // same as in mpc source code
+        error = !mpd_run_play_pos(mpdcHandle->mpd, play);
         count++;
         goto OnDoneExit;
     }
 
-    if (!json_get_int(queryJ, "prev", true, &value)) {
+    if (prev) {
         error = !mpd_run_previous(mpdcHandle->mpd);
         count++;
         goto OnDoneExit;
     }
 
-    if (!json_get_int(queryJ, "next", true, &value)) {
+    if (next) {
         error = !mpd_run_next(mpdcHandle->mpd);
         count++;
         goto OnDoneExit;
@@ -430,14 +441,14 @@ PUBLIC void mpdcapi_subscribe(afb_req request) {
     mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
     if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
 
-    int error= EventSubscribe(request, mpdcHandle);    
-    if (error) goto OnErrorExit;        
-    
+    int error= EventSubscribe(request, mpdcHandle);
+    if (error) goto OnErrorExit;
+
     afb_req_success(request, NULL, NULL);
-    
+
  OnErrorExit:
     mpdcFlushConnect(mpdcHandle);
-    return;    
+    return;
 }
 
 // Connect create a new connection to a given server
