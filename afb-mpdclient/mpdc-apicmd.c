@@ -218,6 +218,7 @@ OnErrorExit:
 PUBLIC void mpdcapi_playlist(afb_req request) {
     json_object *responseJ=NULL;
     int error;
+    char *action;
 
     // Retrieve mpdcHandle from session and assert connection
     json_object *queryJ=afb_req_json(request);
@@ -232,31 +233,56 @@ PUBLIC void mpdcapi_playlist(afb_req request) {
         , "current", &current, "clear",&clear, "shuffle",&shuffle, "name",&name, "save",&save, "load",&load, "move",&moveJ);
 
     if (error) {
-        afb_req_fail_f (request, "MPDC:playlist", "Command Syntax Error query=%s", json_object_get_string(queryJ));
+        action="query parsing";
         goto OnErrorExit;
     }
 
+    // Clear list contend might be filled up back with following options.
+    if (clear) {
+        action="clear";
+        error = !mpd_run_play(mpdcHandle->mpd);
+        if (error) goto OnErrorExit;
+    }
+
     if (shuffle) {
+        action="shuffle";
         error = !mpd_run_play(mpdcHandle->mpd);
         if (error) goto OnErrorExit;
     }
 
     if (name || current) {
+        action="list";
         if (current) name=NULL; // current has precedence on name
         responseJ= ListPlayList (request, mpdcHandle, name);
         if (!responseJ) goto OnErrorExit;
     }
+    
+    if (load) {
+        action="load";
+       if (!name) name="default"; 
+       error= !mpd_send_load(mpdcHandle->mpd, charset_to_utf8(name)); 
+       if (error) goto OnErrorExit;       
+    }
 
-    // No grammatical control but at least clean will return an empty list
-    if (clear) {
-        error = !mpd_run_play(mpdcHandle->mpd);
-        if (error) goto OnErrorExit;
+    if (save) {
+       action="save";
+       if (!name) name="default"; 
+       error= !mpd_send_save(mpdcHandle->mpd, charset_to_utf8(name)); 
+       if (error) goto OnErrorExit;       
+    }
+    
+    if (load) {
+       if (!name) name="default"; 
+       error= !mpd_send_load(mpdcHandle->mpd, charset_to_utf8(name)); 
+       if (error) goto OnErrorExit;       
     }
 
     afb_req_success(request, responseJ, NULL);
     mpdcFlushConnect(mpdcHandle);
+    return;
 
 OnErrorExit:
+    afb_req_fail_f (request,"MPDC:playlist", "control command fail last action=%s query=%s", action, json_object_get_string(queryJ));
     mpdcFlushConnect(mpdcHandle);
     return;
 }
@@ -381,7 +407,6 @@ OnErrorExit:
 PUBLIC void mpdcapi_version(afb_req request) {
 
     // Retrieve mpdcHandle from session and assert connection
-    // Retrieve mpdcHandle from session and assert connection
     json_object *queryJ=afb_req_json(request);
     mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
     if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
@@ -394,6 +419,25 @@ PUBLIC void mpdcapi_version(afb_req request) {
 OnErrorExit:
     mpdcFlushConnect(mpdcHandle);
     return;
+}
+
+
+// Entry point for client to register to MPDC binding events
+PUBLIC void mpdcapi_subscribe(afb_req request) {
+
+    // Retrieve mpdcHandle from session and assert connection
+    json_object *queryJ=afb_req_json(request);
+    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
+    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
+
+    int error= EventSubscribe(request, mpdcHandle);    
+    if (error) goto OnErrorExit;        
+    
+    afb_req_success(request, NULL, NULL);
+    
+ OnErrorExit:
+    mpdcFlushConnect(mpdcHandle);
+    return;    
 }
 
 // Connect create a new connection to a given server
@@ -419,7 +463,7 @@ PUBLIC void mpdcapi_connect(afb_req request) {
 
     if (json_get_int(queryJ, "subscribe", true, &subscribe)) subscribe=false;
     if (subscribe) {
-        int error=EventCreate(mpdcHandle, request);
+        int error=EventMpdSubscribe(mpdcHandle, request);
         if (error) goto OnErrorExit;
     }
 
@@ -438,7 +482,7 @@ OnErrorExit:
 }
 
 // Create a private connection for synchronous commands
-PUBLIC int mpdcapi_init(const char *bindername) {
+PUBLIC int mpdcapi_init(const char *bindername, bool subscribe) {
 
     mpdcLocalHandle = (mpdcHandleT*)calloc (1, sizeof(mpdcHandleT));
     mpdcLocalHandle->label="LocalMpdc";
@@ -454,13 +498,15 @@ PUBLIC int mpdcapi_init(const char *bindername) {
         goto OnErrorExit;
     }
 
-    // best effort to subscribe to event
-    error=EventCreate(mpdcLocalHandle, NULL_AFBREQ);
-    if (error) AFB_WARNING("MPDC:mpdcapi_init Fail Create Event for default Music Player Daemon");
+    // subscribe to Music Player Daemon Events
+    if (subscribe) {
+        error=EventMpdSubscribe(mpdcLocalHandle, NULL_AFBREQ);
+        if (error) AFB_WARNING("MPDC:mpdcapi_init Fail Create Event for default Music Player Daemon");
+    }
 
-    mpdcFlushConnect(mpdcLocalHandle);
-    return false;
+    // Always return happy
 
  OnErrorExit:  // failing to open default MPD is not a fatal error;
+    mpdcFlushConnect(mpdcLocalHandle);
     return false;
 }

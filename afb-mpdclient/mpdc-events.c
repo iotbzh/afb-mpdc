@@ -45,13 +45,14 @@ typedef struct {
 static afbEventT *afbEvent=NULL;
 
 
-PUBLIC int EventPush ( json_object *ctlEventJ) {
-    afbEvent->count++;
+PUBLIC int EventPush (json_object *ctlEventJ) {
  
-    if (!afbEvent && !afb_event_is_valid(afbEvent->event)) {
-        AFB_ERROR ("MPDC:EventPush Hoop Event Structure is not valid");
+    if (!afbEvent || !afb_event_is_valid(afbEvent->event)) {
+        AFB_ERROR ("MPDC:EventPush (Hoop) Event Structure is not valid");
         goto OnErrorExit;
     }
+    
+    afbEvent->count++;
     
     int done = afb_event_push(afbEvent->event, ctlEventJ);
     if (!done) {
@@ -66,39 +67,27 @@ OnErrorExit:
 }
 
 // Subscribe Client to Event
-PUBLIC int EventSubscribe (afb_req request) {
+PUBLIC int EventSubscribe (afb_req request, mpdcHandleT *mpdcHandle) {
     if (!afb_req_is_valid(request)) return true;
     
-    if (!afbEvent) {
+    if (!afb_event_is_valid(mpdcHandle->event)) {
         afb_req_fail (request, "MPDC:EventSubscribe", "Event should be created before subscription");
         return true;
     }
     
-    int err = afb_req_subscribe(request, afbEvent->event);
+    int err = afb_req_subscribe(request, mpdcHandle->event);
     if (err) {
-        afb_req_fail (request, "MPDC:EventSubscribe", "Client Protocol is not compatible with event subcription");        
+        afb_req_fail (request, "MPDC:EventSubscribe", "Client Protocol is not compatible with event subcription"); 
+        return true;
     }
     
     return false;
 }
 
 
-// Entry point for client to register to MPDC binding events
-PUBLIC void mpdcapi_subscribe(afb_req request) {
-
-
-    int error= EventSubscribe(request);    
-    if (error) goto OnErrorExit;        
-    
-    afb_req_success(request, NULL, NULL);
-    return;
-    
- OnErrorExit:
-    return;    
-}
 
 // Create MPDC binder event and open a new socket to MPD for event only
-PUBLIC int EventCreate(mpdcHandleT *mpdcHandle, afb_req request) {
+PUBLIC int EventMpdSubscribe(mpdcHandleT *mpdcHandle, afb_req request) {
     int error;
     
     error=mpdcIfConnectFail(MPDC_CHANNEL_EVT, mpdcHandle, request);

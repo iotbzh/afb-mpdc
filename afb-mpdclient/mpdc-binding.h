@@ -33,12 +33,13 @@
 PUBLIC int mpdcIfConnectFail(mpdcChannelEnumT channel, mpdcHandleT *mpdcHandle, afb_req request);
 
 // mpdc_command.c
-PUBLIC int mpdcapi_init(const char *bindername);
+PUBLIC int mpdcapi_init(const char *bindername, bool subscribe);
 
 // mpdc-event.c
 PUBLIC int EventPush ( json_object *ctlEventJ);
-PUBLIC void mpdcapi_subscribe(afb_req request);
-PUBLIC int EventCreate(mpdcHandleT *mpdcHandle, afb_req request);
+PUBLIC int EventMpdSubscribe(mpdcHandleT *mpdcHandle, afb_req request);
+PUBLIC int EventSubscribe (afb_req request, mpdcHandleT *mpdcHandle);
+
 
 // MainLoop.c
 PUBLIC int MainLoopAddMpdc(mpdcHandleT *mpdcHandle);

@@ -33,7 +33,8 @@
     <br>
     <li><button onclick="callbinder('mpdc','listsong',{});">List Song in Music Directory</button></li>
     <li><button onclick="callbinder('mpdc','playlist',{'current':true});">List Current Playlist Queue</button></li>
-    <li><button onclick="<">List Playlist name 'default'</button></li>
+    <li><button onclick="callbinder('mpdc','playlist',{'clear': true, 'load':'default'});">Load 'default' Playlist'</button></li>
+    <li><button onclick="callbinder('mpdc','playlist',{'save':'default'});">Save 'default' Playlist'</button></li>
     <br>
     <li><button onclick="callbinder('mpdc','output',{list:true, only:true, target:{name:'multimedia',enable:true}});">Enable Multimedia Only</button></li>
     <li><button onclick="callbinder('mpdc','output',{list:true, target:{all:true, enable:true}});">Enable All Defined Output</button></li>

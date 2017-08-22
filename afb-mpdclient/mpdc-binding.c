@@ -89,10 +89,15 @@ STATIC int mpdcBindingInit(void) {
     // create a global event to send MPDC events
     const char*binderName = GetBinderName();
 
-    // when set wait for explicit connect request
-    const char *noDefConnect= getenv("MPDC_NODEF_CONNECT");
-    if (!noDefConnect) rc=mpdcapi_init(binderName);
+    // By Default we try to connect+subscribe to default Music Player Daemon
+    const char *envIsSet= getenv("MPDC_NODEF_CONNECT");
+    if (!envIsSet) {
+        const char *envIsSet= getenv("MPDC_NODEF_SUBSCRIBE");
+        if (!envIsSet) rc=mpdcapi_init(binderName, true);
+        else rc=mpdcapi_init(binderName, false);
 
+    }
+    
     return rc;
 }
 
