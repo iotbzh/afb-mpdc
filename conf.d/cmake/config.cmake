@@ -18,7 +18,7 @@
 
 # Project Info
 # ------------------
-set(PROJECT_NAME mpdc-binding)
+set(PROJECT_NAME afb-mpdc)
 set(PROJECT_VERSION "0.1")
 set(PROJECT_PRETTY_NAME "Advance Audio Client for Music Player Daemon")
 set(PROJECT_DESCRIPTION "Provide an AGL Application Framework Binding for Music Player Daemon")
