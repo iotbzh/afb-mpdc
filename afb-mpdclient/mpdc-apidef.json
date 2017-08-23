@@ -347,17 +347,17 @@
                     }
                 }, {
                     "in": "query",
-                    "name": "toogle",
+                    "name": "toggle",
                     "required": false,
                     "schema": {
-                        "type": "boolean"
+                        "type": "integer"
                     }
                 }, {
                     "in": "query",
                     "name": "play",
                     "required": false,
                     "schema": {
-                        "type": "boolean"
+                        "type": "integer"
                     }
                 }, {
                     "in": "query",

@@ -36,6 +36,10 @@
 #include "mpdc-binding.h"
 #include "json-setget.h"
 
+#define MPD_REQ_FAIL(req, str, queryJ, error) \
+    afb_req_fail_f(req, str, "Invalid query input '%s' : error %s, position %d", \
+        json_object_get_string(queryJ), wrap_json_get_error_string(error), \
+        wrap_json_get_error_position(error));
 
 // Jose this is really scrap !!!
 static afb_req NULL_AFBREQ = {};
@@ -96,6 +100,7 @@ PUBLIC void mpdcapi_search(afb_req request) {
     err+= json_get_object (queryJ, "target" , false, &targetJ);
     if (err) {
         afb_req_fail_f (request, "MDCP:Search","Search 'display' field not found in '%s'", json_object_get_string(queryJ));
+        //MPD_REQ_FAIL(request, "MDCP:Search", queryJ, err);
         goto OnErrorExit;
     }
 
@@ -326,7 +331,7 @@ PUBLIC void mpdcapi_output(afb_req request) {
 
     // for unknown reason queryJ=="null" when query is empty (José ???)
     if(error && (queryJ!=NULL && json_object_get_type(queryJ) == json_type_object)) {
-       afb_req_fail_f(request, "MDCP:Output", "Invalid query input '%s'", json_object_get_string(queryJ));
+       MPD_REQ_FAIL(request, "MDCP:Output", queryJ, error);
        goto OnErrorExit;
     }
 
@@ -341,6 +346,7 @@ OnErrorExit:
 
 PUBLIC void mpdcapi_control(afb_req request) {
     int error, count=0;
+    const char *session;
     int pause, resume, toggle, play, prev, next;
     pause = resume = prev = next = false;
     toggle = play = -1;
@@ -351,12 +357,12 @@ PUBLIC void mpdcapi_control(afb_req request) {
     if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request))
         goto OnErrorExit;
 
-    error = wrap_json_unpack(queryJ, "{s?b,s?b,s?i,s?i,s?b,s?b}",
-                "pause", &pause, "resume", &resume, "toogle", &toggle,
+    error = wrap_json_unpack(queryJ, "{s?s,s?b,s?b,s?i,s?i,s?b,s?b !}",
+                "session", &session, "pause", &pause, "resume", &resume, "toggle", &toggle,
                 "play", &play, "prev", &prev, "next", &next);
     // for unknown reason queryJ=="null" when query is empty (José ???)
     if (error && (queryJ != NULL && json_object_get_type(queryJ) == json_type_object)) {
-        afb_req_fail_f(request, "MDCP:control", "Invalid query input '%s'", json_object_get_string(queryJ));
+        MPD_REQ_FAIL(request, "MDCP:control", queryJ, error);
         goto OnErrorExit;
     }
 
@@ -372,7 +378,7 @@ PUBLIC void mpdcapi_control(afb_req request) {
        goto OnDoneExit;
     }
 
-    if (toggle >= 0) {
+    if (toggle > 0) {
         mpdStatusT *status = StatusRun(request, mpdcHandle);
         count++;
      	if (mpd_status_get_state(status) == MPD_STATE_PLAY) {
@@ -380,11 +386,11 @@ PUBLIC void mpdcapi_control(afb_req request) {
     	} else {
             toggle--;   // same as in mpc source code
             error = !mpd_run_play_pos(mpdcHandle->mpd, toggle);
-	    }
+        }
         goto OnDoneExit;
     }
 
-    if (play >= 0) {
+    if (play > 0) {
         play--;   // same as in mpc source code
         error = !mpd_run_play_pos(mpdcHandle->mpd, play);
         count++;

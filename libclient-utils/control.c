@@ -13,7 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * References:
  *  Utilities rebuilt from Media Daemon Command Line Interface
  *  https://github.com/MusicPlayerDaemon/libmpdclient
@@ -31,9 +31,9 @@
 #include "json-setget.h"
 
 PUBLIC json_object *CtlPlayCurrentSong(const struct mpd_song *song) {
-    
+
     if (!song)  goto OnErrorExit;
-    
+
 
     // Extract Song Informations
     const char *uri= mpd_song_get_uri(song);
@@ -43,18 +43,20 @@ PUBLIC json_object *CtlPlayCurrentSong(const struct mpd_song *song) {
     json_object *track = StatusSongTag(song, MPD_TAG_TRACK);
     json_object *name  = StatusSongTag(song, MPD_TAG_NAME);
     json_object *date  = StatusSongTag(song, MPD_TAG_DATE);
-    
-    // build response 
+
+    // build response
     //int error= wrap_json_pack(&responseJ, "{s:s*, s:s*, s:s*, s:s*, s:s*, s:s*, s:s*}"
     //    , "uri",uri, "artist",artist, "album", album, "title", title, "track", track, "name", name, "date", date);
     //    if (error) {
-    //       afb_req_fail(request, "MDCP:CtlPlayCurrentSong", "Fail to process song tags"); 
-    //       goto OnErrorExit;        
+    //       afb_req_fail(request, "MDCP:CtlPlayCurrentSong", "Fail to process song tags");
+    //       goto OnErrorExit;
     //    }
 
     json_object *responseJ=json_object_new_object();
     int index = mpd_song_get_id(song);
     if (index) json_object_object_add(responseJ, "index",json_object_new_int(index));
+    int pos = mpd_song_get_pos(song) + 1;
+    if (pos) json_object_object_add(responseJ, "position",json_object_new_int(pos));
     if(artist) json_object_object_add(responseJ, "artist", artist);
     if(album) json_object_object_add(responseJ, "album", album);
     if(album) json_object_object_add(responseJ, "title", title);
@@ -62,11 +64,10 @@ PUBLIC json_object *CtlPlayCurrentSong(const struct mpd_song *song) {
     if(name) json_object_object_add(responseJ, "name", name);
     if(date) json_object_object_add(responseJ, "date", date);
     if(uri) json_object_object_add(responseJ, "uri", json_object_new_string(uri));
-    
-        
+
     // free song resources
-    mpd_song_free((struct mpd_song*)song);    
-    
+    mpd_song_free((struct mpd_song*)song);
+
     return responseJ;
 
 OnErrorExit:
@@ -80,13 +81,13 @@ PUBLIC json_object *CtlGetversion(mpdcHandleT *mpdcHandle, afb_req request) {
 
     // get MPD version
     version=mpd_connection_get_server_version(mpdcHandle->mpd);
-    int major=version[0]; 
+    int major=version[0];
     int minor=version[1];
     int patch=version[2];
-    
+
     // return as a json_object
     wrap_json_pack(&responseJ, "{si,si,si}", "major", major, "minor",minor, "patch",patch);
-    
+
     return (responseJ);
 
 }
