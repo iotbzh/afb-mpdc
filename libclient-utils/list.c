@@ -88,7 +88,7 @@ OnErrorExit:
 
 
 PUBLIC json_object* ListDirSong (afb_req request, mpdcHandleT *mpdcHandle, json_object *pathsJ) {
-    json_object *responseJ, *pathJ, *entityJ;
+    json_object *responseJ=NULL, *pathJ, *entityJ=NULL;
     const char *path;
 
     switch (json_object_get_type (pathsJ)) {
@@ -112,7 +112,7 @@ PUBLIC json_object* ListDirSong (afb_req request, mpdcHandleT *mpdcHandle, json_
 
         case json_type_string:
             path= json_object_get_string(pathsJ);
-            entityJ=GetEntityList (request, mpdcHandle, charset_to_utf8(path), MPD_ENTITY_TYPE_UNKNOWN);
+            responseJ=GetEntityList (request, mpdcHandle, charset_to_utf8(path), MPD_ENTITY_TYPE_UNKNOWN);
             break;
 
         case json_type_object:

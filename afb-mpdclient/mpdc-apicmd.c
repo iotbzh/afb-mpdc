@@ -223,7 +223,7 @@ OnErrorExit:
 PUBLIC void mpdcapi_playlist(afb_req request) {
     json_object *responseJ=NULL;
     int error;
-    char *action;
+    char *action="none";
 
     // Retrieve mpdcHandle from session and assert connection
     json_object *queryJ=afb_req_json(request);
