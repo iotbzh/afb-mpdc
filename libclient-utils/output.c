@@ -53,7 +53,7 @@ typedef struct {
 STATIC bool OutputOneSetGet(afb_req request, mpdConnectT *mpdConnect, bool only, outputElemT *outputs, json_object *targetJ) {
     const char *name=NULL;
     int id=0, enable=true, all=false;
-
+    
     int err= wrap_json_unpack(targetJ, "{s?b,s?s,s?i,s?b !}",  "enable", &enable, "name", &name, "id", &id, "all", &all);
     if (err) {
         afb_req_fail_f(request, "MPDC:OutputOneSetGet", "Invalid Ouput target='%s'", json_object_get_string(targetJ));

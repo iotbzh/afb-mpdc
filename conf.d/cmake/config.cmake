@@ -81,7 +81,14 @@ add_compile_options(-DMPDC_DEFAULT_TIMEOUT=10000)
 
 # Magic number to check MPDC plugin session integrity
 add_compile_options(-DMPDC_SESSION_MAGIC=963258741)
-set(CLOSING_MESSAGE "Debug from ./buid: afb-daemon --port=1234 --ldpaths=. --workdir=. --roothttp=../htdocs --tracereq=common --token='' --verbose")
+
+# Print a helper message when every thing is finished
+# ----------------------------------------------------
+if(IS_DIRECTORY $ENV{HOME}/opt/afb-monitoring)
+set(MONITORING_ALIAS "--alias=/monitoring:$ENV{HOME}/opt/afb-monitoring")
+endif()
+set(CLOSING_MESSAGE "Debug from afb-daemon --port=1234 ${MONITORING_ALIAS} --ldpaths=. --workdir=. --roothttp=../htdocs --tracereq=common --token= --verbose ")
+set(PACKAGE_MESSAGE "Install widget file using in the target : afm-util install ${PROJECT_NAME}.wgt")
 
 # Customize link option
 # -----------------------------
