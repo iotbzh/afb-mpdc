@@ -483,7 +483,7 @@ PUBLIC void mpdcapi_connect(afb_req request) {
         int error=EventMpdSubscribe(mpdcHandle, request);
         if (error) goto OnErrorExit;
     }
-
+    
     // return handle address as hexadecimal
     snprintf(session, sizeof(session), "%p", mpdcHandle);
     json_object *responseJ=json_object_new_object();
