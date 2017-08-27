@@ -36,7 +36,7 @@ PUBLIC int mpdcIfConnectFail(mpdcChannelEnumT channel, mpdcHandleT *mpdcHandle, 
 PUBLIC int mpdcapi_init(const char *bindername, bool subscribe);
 
 // mpdc-event.c
-PUBLIC int EventPush ( json_object *ctlEventJ);
+PUBLIC int EventPush (mpdcHandleT *mpdcHandle, json_object *ctlEventJ);
 PUBLIC int EventMpdSubscribe(mpdcHandleT *mpdcHandle, afb_req request);
 PUBLIC int EventSubscribe (afb_req request, mpdcHandleT *mpdcHandle);
 

@@ -36,27 +36,18 @@
 #include "mpdc-binding.h"
 
 
-typedef struct {
-    const char *name;
-    int  count;
-    afb_event event;
-} afbEventT;
-
-static afbEventT *afbEvent=NULL;
-
-
-PUBLIC int EventPush (json_object *ctlEventJ) {
+PUBLIC int EventPush (mpdcHandleT *mpdcHandle, json_object *ctlEventJ) {
  
-    if (!afbEvent || !afb_event_is_valid(afbEvent->event)) {
+    if (!mpdcHandle || !afb_event_is_valid(mpdcHandle->event)) {
         AFB_ERROR ("MPDC:EventPush (Hoop) Event Structure is not valid");
         goto OnErrorExit;
     }
     
-    afbEvent->count++;
+    mpdcHandle->count++;
     
-    int done = afb_event_push(afbEvent->event, ctlEventJ);
+    int done = afb_event_push(mpdcHandle->event, ctlEventJ);
     if (!done) {
-        AFB_ERROR ("MPDC:EventPush (no client) event=%s count=%d", afbEvent->name, afbEvent->count);
+        AFB_ERROR ("MPDC:EventPush (no client) event=%s count=%d", mpdcHandle->label, mpdcHandle->count);
         goto OnErrorExit;
     }
     
@@ -92,6 +83,21 @@ PUBLIC int EventMpdSubscribe(mpdcHandleT *mpdcHandle, afb_req request) {
     
     error=mpdcIfConnectFail(MPDC_CHANNEL_EVT, mpdcHandle, request);
     if (error) goto OnErrorExit;
+    
+    // create the event with label name
+    
+    // create binder event to send test pause/resume
+    mpdcHandle->event = afb_daemon_make_event(mpdcHandle->label);
+    if (!afb_event_is_valid(mpdcHandle->event)) {
+        AFB_ERROR ("MPDC:EventMpdSubscribe Cannot create event label=%s",mpdcHandle->label);
+        return 1;
+    }
+    
+    int err = afb_req_subscribe(request, mpdcHandle->event);
+    if (err) {
+        AFB_ERROR ("MPDC:EventMpdSubscribe Fail Client Event Subscribe label=%s",mpdcHandle->label);
+        goto OnErrorExit;
+    }
     
     // Connect Event Channel to Mainloop
     error=MainLoopAddMpdc(mpdcHandle);

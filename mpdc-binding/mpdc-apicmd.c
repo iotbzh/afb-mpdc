@@ -145,6 +145,7 @@ PUBLIC void mpdcapi_search(afb_req request) {
 
     // return status
     afb_req_success(request, listJ, NULL);
+    mpdcFlushConnect(mpdcHandle);
 
 OnErrorExit:
     mpdcFlushConnect(mpdcHandle);
@@ -243,28 +244,6 @@ OnErrorExit:
     return;
 }
 
-// Provide playlist Management
-PUBLIC void mpdcapi_listsong(afb_req request) {
-    json_object *responseJ=NULL;
-
-    // Retrieve mpdcHandle from session and assert connection
-    json_object *queryJ=afb_req_json(request);
-    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
-    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
-
-    responseJ = ListDirSong(request, mpdcHandle, queryJ);
-    if (!responseJ) goto OnErrorExit;
-
-    afb_req_success(request, responseJ, NULL);
-    mpdcFlushConnect(mpdcHandle);
-    return ;
-
-OnErrorExit:
-    afb_req_fail (request, "MPDC:Control", "Requested Control Fail (no control?)");
-    mpdcFlushConnect(mpdcHandle);
-    return;
-}
-
 
 // return list of configured output
 PUBLIC void mpdcapi_output(afb_req request) {
@@ -296,7 +275,7 @@ OnErrorExit:
 }
 
 PUBLIC void mpdcapi_control(afb_req request) {
-    int error, count=0;
+    int error;
     const char *session;
     int pause, resume, toggle, play, prev, next;
     pause = resume = prev = next = false;
@@ -319,20 +298,17 @@ PUBLIC void mpdcapi_control(afb_req request) {
 
     if (pause) {
        error =!mpd_send_pause(mpdcHandle->mpd, true);
-       count++;
        goto OnDoneExit;
     }
 
     if (resume) {
        error = !mpd_run_play(mpdcHandle->mpd);
-       count++;
        goto OnDoneExit;
     }
 
     if (toggle > 0) {
         mpdStatusT *status = StatusRun(request, mpdcHandle);
-        count++;
-     	if (mpd_status_get_state(status) == MPD_STATE_PLAY) {
+     	if (!status || mpd_status_get_state(status) == MPD_STATE_PLAY) {
             error = !mpd_send_pause(mpdcHandle->mpd, true);
     	} else {
             toggle--;   // same as in mpc source code
@@ -344,24 +320,21 @@ PUBLIC void mpdcapi_control(afb_req request) {
     if (play > 0) {
         play--;   // same as in mpc source code
         error = !mpd_run_play_pos(mpdcHandle->mpd, play);
-        count++;
         goto OnDoneExit;
     }
 
     if (prev) {
         error = !mpd_run_previous(mpdcHandle->mpd);
-        count++;
         goto OnDoneExit;
     }
 
     if (next) {
         error = !mpd_run_next(mpdcHandle->mpd);
-        count++;
         goto OnDoneExit;
     }
 
 OnDoneExit:
-    if (error || count==0)
+    if (error)
         afb_req_fail (request, "MPDC:Control", "Requested Control Fail (no control?)");
     else
         afb_req_success(request, NULL, NULL);
@@ -382,6 +355,7 @@ PUBLIC void mpdcapi_version(afb_req request) {
     json_object *responseJ= CtlGetversion(mpdcHandle, request);
     if (!responseJ) goto OnErrorExit;
 
+    mpdcFlushConnect(mpdcHandle);
     afb_req_success(request, responseJ, NULL);
 
 OnErrorExit:
@@ -404,14 +378,13 @@ PUBLIC void mpdcapi_subscribe(afb_req request) {
     afb_req_success(request, NULL, NULL);
 
  OnErrorExit:
-    mpdcFlushConnect(mpdcHandle);
     return;
 }
 
 // Connect create a new connection to a given server
 PUBLIC void mpdcapi_connect(afb_req request) {
     char session[16];
-    int subscribe=false;
+    bool subscribe=false;
 
     mpdcHandleT *mpdcHandle = (mpdcHandleT*)calloc (1, sizeof(mpdcHandleT));
     mpdcHandle->magic=MPDC_SESSION_MAGIC;
@@ -429,7 +402,7 @@ PUBLIC void mpdcapi_connect(afb_req request) {
     //  Check/Build Connection to MPD
     if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
 
-    if (json_get_int(queryJ, "subscribe", true, &subscribe)) subscribe=false;
+    if (json_get_bool(queryJ, "subscribe", true, &subscribe)) subscribe=false;
     if (subscribe) {
         int error=EventMpdSubscribe(mpdcHandle, request);
         if (error) goto OnErrorExit;
@@ -442,6 +415,7 @@ PUBLIC void mpdcapi_connect(afb_req request) {
     json_object_object_add(responseJ, "version", CtlGetversion(mpdcHandle, request));
     json_object_object_add(responseJ,"output",OutputSetGet(request, mpdcHandle, true, false, NULL));
 
+    mpdcFlushConnect(mpdcHandle);
     afb_req_success(request, responseJ, NULL);
 
 OnErrorExit:
@@ -460,7 +434,7 @@ PUBLIC int mpdcapi_init(const char *bindername, bool subscribe) {
     
     // failing to connect is not a fatal error
     if (error) {
-        AFB_WARNING("MPDC:mpdcapi_init No Default Music Player Daemon (setenv MPDC_NODEF_CONNECT");
+        AFB_WARNING("MPDC:mpdcapi_init No Default Music Player Daemon (setenv MPDC_NODEF_CONNECT)");
         free (mpdcLocalHandle);
         mpdcLocalHandle=NULL;
         goto OnErrorExit;

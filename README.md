@@ -37,7 +37,7 @@ See instructions for AGL Linux native dev packages at https://en.opensuse.org/Li
    * Place config file somewhere (default mpd search location $HOME/.config/mpd/mpd.conf or /etc/mpd.conf)
    * Edit mpd.conf to reflect your configuration
  * Start MPD in debug mode
-   * mpd --no-daemon path-to-your-mpd.conf
+   * mpd --no-daemon --stderr -v path-to-your-mpd.conf
  * Start mpdc-binding
    * afb-daemon
 
@@ -95,12 +95,6 @@ See instructions for AGL Linux native dev packages at https://en.opensuse.org/Li
     * only(default:false) revers action for every non listed output
     * target:(default:none) json array of targeted outputs [{name:xxxx|id:??|all:true, enable:true/false}]
     * example: {api:'mpdc',verb:'output', only:true, target:[{name='zone-front',enable:true(default)}, ...], ...}
-
- * Play a song from a playlist
-    * current(default:true): play current song from current playlist
-    * index(default:true) song index in play list
-    * playlist(optional): chosen playlist name
-    * example:  {api:'mpdc',verb:'play', query={playlist:'Fulup', index:10}}
 
  * Control send control action to music daemon (except when specified control are simple boolean)
     * pause

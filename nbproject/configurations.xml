@@ -47,7 +47,7 @@
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>build</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <buildCommand>${MAKE} -f Makefile populate</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath></executablePath>
         </makeTool>

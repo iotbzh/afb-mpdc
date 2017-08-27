@@ -141,13 +141,16 @@ PUBLIC json_object *ListPlayList (afb_req request, mpdcHandleT *mpdcHandle, cons
     if (name) {
         int done = mpd_send_list_playlist_meta(mpdcHandle->mpd, name);
         if (!done) {
-            afb_req_fail(request, "MPDC:PlaylistPrint Fail to retrieve content playlist=%s", name);
+            afb_req_fail_f(request, "MPDC:PlaylistList", "Fail to retrieve content playlist=%s", name);
             goto OnErrorExit;
         }
     } else { // no name return current queue list
-        mpd_send_list_queue_meta(mpdcHandle->mpd);
+        int done = mpd_send_list_queue_meta(mpdcHandle->mpd);
+        if (!done) {
+            afb_req_fail(request, "MPDC:PlaylistList", "MPDC:PlaylistPrint Fail to retrieve content playlist=current");
+            goto OnErrorExit;
+        }
     }
-    mpd_response_finish(mpdcHandle->mpd);
 
     struct mpd_song *song;
     while ((song = mpd_recv_song(mpdcHandle->mpd)) != NULL) {
@@ -158,7 +161,7 @@ PUBLIC json_object *ListPlayList (afb_req request, mpdcHandleT *mpdcHandle, cons
 
     if (count == 0) {
         if (!name) name="Current/Active";
-        afb_req_fail_f(request, "MPDC:PlaylistPrint List Empty playlist=%s", name);
+        afb_req_fail_f(request, "MPDC:PlaylistList", "MPDC:PlaylistPrint List Empty playlist=%s", name);
         goto OnErrorExit;
     }
 

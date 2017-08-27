@@ -35,6 +35,11 @@ PUBLIC  int mpdcIfConnectFail(mpdcChannelEnumT channel, mpdcHandleT *mpdcHandle,
     int forceConnect= false; 
     mpdConnectT *mpd;
     
+    if(!mpdcHandle) {
+        afb_req_fail (request, "MDCP:mpdcIfConnectFail", "No Valid Handle");
+         goto OnErrorExit;
+    }
+    
     // if exit try reusing current connection
     switch (channel) {
         case MPDC_CHANNEL_CMD:

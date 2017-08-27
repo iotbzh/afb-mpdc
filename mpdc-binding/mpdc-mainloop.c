@@ -73,19 +73,20 @@ STATIC int MainLoopCallback(sd_event_source* src, int fd, uint32_t revents, void
             stateName="MPD_STATE_UNKNOWN";
     }
         
-    // We are now ready to broadcast our event to every subscribers.
+    // We are now ready to push MPD event to every subscribers.
     json_object *ctlEventJ= json_object_new_object();
     json_object_object_add(ctlEventJ,"state", json_object_new_string(stateName));
-    (void)EventPush (ctlEventJ);
-    
     if (state == MPD_STATE_PLAY) {
         mpd_response_next(mpdcHandle->mpdEvt);
         struct mpd_song *song;
         song = mpd_recv_song(mpdcHandle->mpdEvt);
         json_object *songJ= CtlPlayCurrentSong(song);
-        (void)EventPush (songJ);
+        json_object_object_add(ctlEventJ,"song", songJ);
     }
-       
+     
+   
+    int error=EventPush (mpdcHandle, ctlEventJ);
+    if (error) AFB_NOTICE ("MPDC received MPD event=%s (no subscriber)", stateName);
     mpd_response_finish(mpdcHandle->mpdEvt);
     mpd_send_idle_mask(mpdcHandle->mpdEvt, MPD_IDLE_PLAYER); 
     return 0;

@@ -216,27 +216,6 @@
                 }
             }
         },
-        "/listsong": {
-            "description": "List Songs From Music Library.",
-            "get": {
-                "x-permissions": {
-                    "$ref": "#/components/x-permissions/mpdclient"
-                },
-                "parameters": [{
-                    "in": "query",
-                    "name": "path",
-                    "required": false,
-                    "schema": {
-                        "type": "integer"
-                    }
-                }],
-                "responses": {
-                    "200": {
-                        "$ref": "#/components/responses/200"
-                    }
-                }
-            }
-        },
         "/playlist": {
             "description": "List Playlist Content.",
             "get": {
