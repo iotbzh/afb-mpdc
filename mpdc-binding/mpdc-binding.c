@@ -101,8 +101,13 @@ STATIC int mpdcBindingInit(void) {
     envIsSet= getenv("AAAA_NODEF_CONNECT");
     if (!envIsSet) {
         json_object *responseJ;
-        int error=afb_service_call_sync("control","subscribe", NULL, &responseJ);
-        if (error) AFB_WARNING ("Fail to register to 'aaaa' event response=%s", json_object_get_string(responseJ));
+        int err = afb_daemon_require_api("control", 1);
+        if (err) {
+            AFB_WARNING("DISPATCH-LOAD-CONFIG:REQUIRE 'control' Fail");
+        } else {
+            int error=afb_service_call_sync("control","subscribe", NULL, &responseJ);
+            if (error) AFB_WARNING ("Fail to register to 'aaaa' event response=%s", json_object_get_string(responseJ));
+        }
     }
 
     return rc;

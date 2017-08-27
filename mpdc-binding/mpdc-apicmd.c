@@ -506,7 +506,7 @@ PUBLIC int mpdcapi_init(const char *bindername, bool subscribe) {
     mpdcLocalHandle->magic=MPDC_SESSION_MAGIC;
     mpdcLocalHandle->timeout=MPDC_DEFAULT_TIMEOUT;
     int error=mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcLocalHandle, NULL_AFBREQ);
-
+    
     // failing to connect is not a fatal error
     if (error) {
         AFB_WARNING("MPDC:mpdcapi_init No Default Music Player Daemon (setenv MPDC_NODEF_CONNECT");
@@ -524,6 +524,6 @@ PUBLIC int mpdcapi_init(const char *bindername, bool subscribe) {
     // Always return happy
 
  OnErrorExit:  // failing to open default MPD is not a fatal error;
-    mpdcFlushConnect(mpdcLocalHandle);
+    if (mpdcLocalHandle) mpdcFlushConnect(mpdcLocalHandle);
     return false;
 }
