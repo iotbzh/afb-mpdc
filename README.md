@@ -2,6 +2,17 @@
 #                Audio Client Binding for Music Daemon Player
 ------------------------------------------------------------------------
 
+MPDC (Music Player Daemon Client) is a standard AGL Application Framework binding. It works on AGL as well as on any modern
+Linux standard distribution. It provide API to play music, handle playlist, ... It it a work in progress and while not every
+simple function from MPD are exposed al critical one to build a demo should be in place.
+
+MPDC support multiple clients and multiple servers. It is rely on MPD official client library and support command channel as
+well as event notifications. This last point allow AGL client to be notify of audio changes automatically (ex: new song).
+
+MPDC can run as a standalone binder or may be merge with others audio bindings (e.g. run MPSC directly as an API of AAAA).
+It can also combine with a controller in case authorisation/policy would be needed.  
+
+
 ## Cloning Music Player Binding from Git
 -------------------------------------------------------
 
@@ -77,7 +88,6 @@ See instructions for AGL Linux native dev packages at https://en.opensuse.org/Li
    - MPD_PORT=$NAV_MPD mpc pause
    - MPD_PORT=$NAV_MPD mpc toggle
 
-
    ```
 
 ## API
@@ -130,6 +140,19 @@ See instructions for AGL Linux native dev packages at https://en.opensuse.org/Li
   is et no connection is try at initialisation time and MPDC will wait for effective connection request. Note that MPDC support
   simultaneous connections to as many MPD you need (in demo sample config: Multimedia, Navigation, Emergency, ...).
 
+## Testing 
 
+ * Start a Music Player Daemon with default option (port 6600) check sample config in conf.d/project/mpd.d
+ * Start MPDC in a standalone binder as described here after
 
+```
+cd build
+cmake ..
+make populate
+afb-daemon --port=1234 --ldpaths=package/lib --workdir=. --roothttp=../htdocs --tracereq=common \
+--token= --verbose --ws-server=unix:/var/tmp/afb-ws/mpdc
+```
+
+Note that we expose MPDC API for other binding to consume it. Check [aaaa-demo](https://github.com/iotbzh/afb-aaaa) that consume mpdc API. For test only you may connect
+directly on http://localhost:1234 to access test and monitoring pages. Condig to run/debug inside netbeans [here](htdocs/docs/netbean-afb-mpdc-config.png)
 
