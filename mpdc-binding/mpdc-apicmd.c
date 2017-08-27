@@ -153,53 +153,6 @@ OnErrorExit:
 
 
 // return Player Daemon Status
-/* XXX - cleanup : replace by mpdapi_control type play
-PUBLIC void mpdcapi_play(afb_req request) {
-    json_object  *responseJ=NULL;
-    int done;
-
-    // Retrieve mpdcHandle from session and assert connection
-    json_object *queryJ=afb_req_json(request);
-    mpdcHandleT *mpdcHandle=GetSessionHandle(queryJ);
-    if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
-
-    // retrieve optional song index
-    int index=0;
-    int current=0;
-    wrap_json_unpack(queryJ, "{s?i, s?b s?b!}", "index", &index, "current", &current);
-
-    if (current) {
-        struct mpd_song *song;
-
-        // try to run current song
-        song = mpd_run_current_song(mpdcHandle->mpd);
-        if (song == NULL) {
-            afb_req_fail(request, "MDCP:CtlPlayCurrentSong", "No Current Song Selected");
-            goto OnErrorExit;
-        }
-        responseJ=CtlPlayCurrentSong(song);
-        if (!responseJ) goto OnErrorExit;
-    }
-    else if (index)
-        done=mpd_run_play_pos(mpdcHandle->mpd, index);
-    else
-        done=mpd_run_play(mpdcHandle->mpd);
-
-    if(!done) {
-        miscPostError(request, "MPDC:Play Fail to Process Request", mpdcHandle);
-        goto OnErrorExit;
-    }
-
-    // return status
-    afb_req_success(request, responseJ, NULL);
-
-OnErrorExit:
-    mpdcFlushConnect(mpdcHandle);
-    return;
-}
-*/
-
-// return Player Daemon Status
 PUBLIC void mpdcapi_status(afb_req request) {
 
     // Retrieve mpdcHandle from session and assert connection
@@ -231,11 +184,11 @@ PUBLIC void mpdcapi_playlist(afb_req request) {
     if (mpdcIfConnectFail(MPDC_CHANNEL_CMD, mpdcHandle, request)) goto OnErrorExit;
 
     // unpack json query object
-    int current=false, clear=false, shuffle=false;
-    char *name=NULL, *save=NULL, *load=NULL;
-    json_object *moveJ=NULL;
-    error=wrap_json_unpack(queryJ, "{s?b,s?b,s?b,s?s,s?s,s?s,s?o}"
-        , "current", &current, "clear",&clear, "shuffle",&shuffle, "name",&name, "save",&save, "load",&load, "move",&moveJ);
+    int current=false, clear=false, shuffle=false, save=false, load=false;
+    char *name=NULL;
+    json_object *moveJ=NULL, *sessionJ=NULL;
+    error=wrap_json_unpack(queryJ, "{s?b,s?b,s?b,s?s,s?b,s?b,s?o,s?o}"
+        , "current", &current, "clear",&clear, "shuffle",&shuffle, "name",&name, "save",&save, "load",&load, "move",&moveJ, "session", &sessionJ);
 
     if (error) {
         action="query parsing";
@@ -247,19 +200,14 @@ PUBLIC void mpdcapi_playlist(afb_req request) {
         action="clear";
         error = !mpd_run_play(mpdcHandle->mpd);
         if (error) goto OnErrorExit;
+        mpdcFlushConnect(mpdcHandle);
     }
 
     if (shuffle) {
         action="shuffle";
         error = !mpd_run_play(mpdcHandle->mpd);
         if (error) goto OnErrorExit;
-    }
-
-    if (name || current) {
-        action="list";
-        if (current) name=NULL; // current has precedence on name
-        responseJ= ListPlayList (request, mpdcHandle, name);
-        if (!responseJ) goto OnErrorExit;
+        mpdcFlushConnect(mpdcHandle);
     }
 
     if (load) {
@@ -267,23 +215,26 @@ PUBLIC void mpdcapi_playlist(afb_req request) {
        if (!name) name="default";
        error= !mpd_send_load(mpdcHandle->mpd, charset_to_utf8(name));
        if (error) goto OnErrorExit;
+       mpdcFlushConnect(mpdcHandle);
+    }
+
+    if (name || current) {
+        action="list";
+        if (current) name=NULL; // current has precedence on name
+        responseJ= ListPlayList (request, mpdcHandle, name);
+        if (!responseJ) goto OnErrorExit;
+        mpdcFlushConnect(mpdcHandle);
     }
 
     if (save) {
-       action="save";
-       if (!name) name="default";
-       error= !mpd_send_save(mpdcHandle->mpd, charset_to_utf8(name));
-       if (error) goto OnErrorExit;
-    }
-
-    if (load) {
-       if (!name) name="default";
-       error= !mpd_send_load(mpdcHandle->mpd, charset_to_utf8(name));
-       if (error) goto OnErrorExit;
+        action="save";
+        if (!name) name="default";
+        error= !mpd_send_save(mpdcHandle->mpd, charset_to_utf8(name));
+        if (error) goto OnErrorExit;
+        mpdcFlushConnect(mpdcHandle);
     }
 
     afb_req_success(request, responseJ, NULL);
-    mpdcFlushConnect(mpdcHandle);
     return;
 
 OnErrorExit:
