@@ -53,8 +53,8 @@ PUBLIC json_object* ScanForConfig (const char* searchPath, CtlScanDirModeT mode,
                 if (dirEnt->d_name[0]=='.' || dirEnt->d_name[0]=='_') continue;
                 
                 strncpy(newpath, searchPath, sizeof(newpath)); 
-                strncat(newpath, "/", sizeof(newpath)); 
-                strncat(newpath, dirEnt->d_name, sizeof(newpath)); 
+                strncat(newpath, "/", sizeof(newpath)-strlen(newpath)-1); 
+                strncat(newpath, dirEnt->d_name, sizeof(newpath)-strlen(newpath)-1); 
                 ScanDir(newpath);
                 continue;
             }
